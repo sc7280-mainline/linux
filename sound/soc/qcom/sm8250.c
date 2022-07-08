@@ -15,7 +15,8 @@
 #include "usb_offload_utils.h"
 #include "sdw.h"
 
-#define MI2S_BCLK_RATE		1536000
+//#define MI2S_BCLK_RATE		1536000
+#define MI2S_BCLK_RATE		3072000 // 48000 kHz * 32 bits/sample * 2 channels (24-bit & 32-bit playback works with this)
 
 struct sm8250_snd_data {
 	bool stream_prepared[AFE_PORT_MAX];
