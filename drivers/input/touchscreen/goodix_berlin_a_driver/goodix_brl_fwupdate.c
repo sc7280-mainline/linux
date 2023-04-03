@@ -1332,7 +1332,7 @@ int goodix_fw_update_init(struct goodix_ts_core *core_data)
 	goodix_fw_update_ctrl.core_data = core_data;
 	goodix_fw_update_ctrl.mode = 0;
 
-	strlcpy(goodix_fw_update_ctrl.fw_name, core_data->board_data.fw_name,
+	strscpy(goodix_fw_update_ctrl.fw_name, core_data->board_data.fw_name,
 		sizeof(goodix_fw_update_ctrl.fw_name));
 
 	ret = goodix_fw_sysfs_init(core_data, &goodix_fw_update_ctrl);
