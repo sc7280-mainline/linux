@@ -1155,7 +1155,7 @@ exit:
 static int rawdata_proc_open(struct inode *inode, struct file *file)
 {
 	return single_open_size(file, rawdata_proc_show,
-			PDE_DATA(inode), PAGE_SIZE * 10);
+			pde_data(inode), PAGE_SIZE * 10);
 }
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
@@ -2230,7 +2230,7 @@ int goodix_ts_fb_notifier_callback(struct notifier_block *self,
 }
 #endif
 
-#if IS_ENABLED(CONFIG_DRM)
+#if 0 // IS_ENABLED(CONFIG_DRM)
 int goodix_ts_drm_notifier_callback(struct notifier_block *self,
         unsigned long event, void *data)
 {
@@ -2392,7 +2392,7 @@ int goodix_ts_stage2_init(struct goodix_ts_core *cd)
 	cd->fb_notifier.notifier_call = goodix_ts_fb_notifier_callback;
 	if (fb_register_client(&cd->fb_notifier))
 		ts_err("Failed to register fb notifier client:%d", ret);
-#elif IS_ENABLED(CONFIG_DRM)	
+#elif 0 // IS_ENABLED(CONFIG_DRM)	
 	cd->fb_notifier.notifier_call = goodix_ts_drm_notifier_callback;
 	if (gdix_active_panel) {	
 		ret = drm_panel_notifier_register(gdix_active_panel,

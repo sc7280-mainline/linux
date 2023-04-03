@@ -21,6 +21,7 @@
 #include <linux/version.h>
 #include <linux/proc_fs.h>
 #include <linux/fs.h>
+#include <linux/proc_fs.h>
 #include <asm/uaccess.h>
 
 
@@ -2903,7 +2904,7 @@ static int auto_test_result_show(struct seq_file *m, void *v)
 static int auto_test_open(struct inode *inode, struct file *file)
 {
 	return single_open_size(file, auto_test_result_show,
-			PDE_DATA(inode), DEFAULT_SEQ_FILE_SIZE);
+			pde_data(inode), DEFAULT_SEQ_FILE_SIZE);
 }
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 6, 0))
