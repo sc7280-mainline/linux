@@ -39,6 +39,11 @@
 #include <linux/notifier.h>
 #include <linux/fb.h>
 #endif
+/*Add by T2M-mingwu.zhang for FP5-187 remarks: Touch parameter scene differentiation.[Begin]*/
+#ifdef CONFIG_PROJECT_FP5
+#include <asm/atomic.h>
+#endif
+/*Add by T2M-mingwu.zhang [End]*/
 
 /*Add by T2M-mingwu.zhang for FP5-538 remarks: TP/LCD Device Information Development.[Begin]*/	
 #ifdef CONFIG_EMKIT_INFO
@@ -649,6 +654,25 @@ struct goodix_ic_config {
 	u8 data[GOODIX_CFG_MAX_SIZE];
 };
 
+/*Add by T2M-mingwu.zhang for FP5-187 remarks: Touch parameter scene differentiation.[Begin]*/
+#ifdef CONFIG_PROJECT_FP5
+extern struct goodix_ts_core *global_core_data;
+enum GOODIX_CFG_CHARGE_TYPE {
+	CFG_TYPE_NULL = 0,
+	CFG_TYPE_CHARGE = CONFIG_TYPE_NORMAL,
+	CFG_TYPE_NON_CHARGE = CONFIG_TYPE_HOLSTER,
+};
+enum GOODIX_CUSTOM_TYPE {
+	GOODIX_CUSTOM_CHARGE_CMD=0,
+	GOODIX_CUSTOM_NONCHARGE_CMD,
+	GOODIX_CUSTOM_VERTICAL_SCREEN_CMD=0,
+	GOODIX_CUSTOM_HORIZONTAL_90_SCREEN_CMD,
+	GOODIX_CUSTOM_HORIZONTAL_270_SCREEN_CMD,
+	GOODIX_CUSTOM_MAX_CMD,
+};
+#endif
+/*Add by T2M-mingwu.zhang [End]*/
+
 struct goodix_ts_core {
 	int init_stage;
 	struct platform_device *pdev;
@@ -677,6 +701,9 @@ struct goodix_ts_core {
 
 	atomic_t irq_enabled;
 	atomic_t suspended;
+
+	/* target config type enum GOODIX_IC_CONFIG_TYPE */
+	enum GOODIX_IC_CONFIG_TYPE config_type;
 	/* when this flag is true, driver should not clean the sync flag */
 	bool tools_ctrl_sync;
 
@@ -686,6 +713,13 @@ struct goodix_ts_core {
 #if (IS_ENABLED(CONFIG_FB) || IS_ENABLED(CONFIG_DRM))
 	struct notifier_block fb_notifier;
 #endif
+
+/*Add by T2M-mingwu.zhang for FP5-187 remarks: Touch parameter scene differentiation.[Begin]*/
+#ifdef CONFIG_PROJECT_FP5
+	struct work_struct tpusb_online_work;
+	atomic_t usb_online;
+#endif
+/*Add by T2M-mingwu.zhang [End]*/
 };
 
 /* external module structures */
