@@ -87,7 +87,7 @@ static int brl_dev_confirm(struct goodix_ts_core *cd)
 	int retry = GOODIX_RETRY_3;
 	u8 tx_buf[8] = {0};
 	u8 rx_buf[8] = {0};
-	u8 i =0;
+//	u8 i =0;
 
 /*Add by T2M-mingwu.zhang for FP5-195 remarks: Double click on driver update.[Begin]*/	
 return ret;
@@ -99,8 +99,8 @@ return ret;
 
 	memset(tx_buf, DEV_CONFIRM_VAL, sizeof(tx_buf));
 
-	for(i=0;i<8;i++)
-		ts_err("zmw---tx_buf[%d]",tx_buf[i]);	
+/* 	for(i=0;i<8;i++)
+		ts_err("zmw---tx_buf[%d]",tx_buf[i]); */	
 
 	while (retry--) {
 		ret = hw_ops->write(cd, BOOTOPTION_ADDR,
@@ -235,26 +235,26 @@ static int brl_power_on(struct goodix_ts_core *cd, bool on)
 
 ts_err("zmw---brl_power_on---op");
 	if (on) {
-		if (avdd_gpio > 0) {
-			gpio_direction_output(avdd_gpio, 1);
-		} else if (cd->avdd) {
-			ret = regulator_enable(cd->avdd);
-ts_err("zmw---brl_power_on---222");			
+		if (iovdd_gpio > 0) {
+			gpio_direction_output(iovdd_gpio, 1);
+		} else if (cd->iovdd) {			
+			ret = regulator_enable(cd->iovdd);
+ts_err("zmw:name=[%s] line=[%d] iovdd \n",__func__,__LINE__);			
 			if (ret < 0) {
-				ts_err("Failed to enable avdd:%d", ret);
+				ts_err("Failed to enable iovdd:%d", ret);
 				goto power_off;
 			}
 		}
 
 		usleep_range(3000, 3100);
-		
-		if (iovdd_gpio > 0) {
-			gpio_direction_output(iovdd_gpio, 1);
-		} else if (cd->iovdd) {
-ts_err("zmw---brl_power_on---111");			
-			ret = regulator_enable(cd->iovdd);
+
+		if (avdd_gpio > 0) {
+			gpio_direction_output(avdd_gpio, 1);
+		} else if (cd->avdd) {
+			ret = regulator_enable(cd->avdd);	
+ts_err("zmw:name=[%s] line=[%d] avdd \n",__func__,__LINE__);					
 			if (ret < 0) {
-				ts_err("Failed to enable iovdd:%d", ret);
+				ts_err("Failed to enable avdd:%d", ret);
 				goto power_off;
 			}
 		}
@@ -263,12 +263,10 @@ ts_err("zmw---brl_power_on---111");
 		usleep_range(4000, 4100);
 		msleep(GOODIX_NORMAL_RESET_DELAY_MS);	
 			
-		ret = brl_dev_confirm(cd);
-ts_err("zmw---brl_power_on---333");		
+		ret = brl_dev_confirm(cd);		
 		if (ret < 0)
 			goto power_off;
-		ret = brl_reset_after(cd);
-ts_err("zmw---brl_power_on---444");		
+		ret = brl_reset_after(cd);		
 		if (ret < 0)
 			goto power_off;
 
@@ -397,9 +395,6 @@ static int brl_send_cmd(struct goodix_ts_core *cd,
 	struct goodix_ic_info_misc *misc = &cd->ic_info.misc;
 	struct goodix_ts_hw_ops *hw_ops = cd->hw_ops;
 
-ts_err("zmw---brl_send_cmd---cmd_addr=[%d] fw_buffer_addr=[%d] touch_data_addr=[%d]op",
-misc->cmd_addr,misc->fw_buffer_addr,misc->touch_data_addr);
-
 	mutex_lock(&cmd_mutex);
 
 	cmd->state = 0;
@@ -409,8 +404,7 @@ misc->cmd_addr,misc->fw_buffer_addr,misc->touch_data_addr);
 	ts_debug("cmd data %*ph", cmd->len, &(cmd->buf[2]));
 
 	retry = 0;
-	while (retry++ < GOODIX_CMD_RETRY) {
-ts_err("zmw---brl_send_cmd---111");		
+	while (retry++ < GOODIX_CMD_RETRY) {	
 		ret = hw_ops->write(cd, misc->cmd_addr,
 				    cmd->buf, sizeof(*cmd));
 		if (ret < 0) {
@@ -426,7 +420,7 @@ ts_err("zmw---brl_send_cmd---111");
 				ts_err("failed read command ack, %d", ret);
 				goto exit;
 			}
-			ts_err("cmd ack data %*ph",
+			ts_debug("cmd ack data %*ph",
 				 (int)sizeof(cmd_ack), cmd_ack.buf);
 			if (cmd_ack.ack == CMD_ACK_OK) {
 				msleep(40);		// wait for cmd response
@@ -438,7 +432,7 @@ ts_err("zmw---brl_send_cmd---111");
 				usleep_range(1000, 1100);
 				continue;
 			}
-ts_err("zmw---brl_send_cmd---222");	
+
 			if (cmd_ack.ack == CMD_ACK_BUFFER_OVERFLOW)
 				usleep_range(10000, 11000);
 			usleep_range(1000, 1100);
@@ -717,8 +711,6 @@ static int brl_read_config(struct goodix_ts_core *cd, u8 *cfg, int size)
 
 	if (!cfg)
 		return -EINVAL;
-
-ts_err("zmw---brl_read_config---op");
 
 	cfg_cmd.len = CONFIG_CND_LEN;
 	cfg_cmd.cmd = CONFIG_CMD_READ_START;
