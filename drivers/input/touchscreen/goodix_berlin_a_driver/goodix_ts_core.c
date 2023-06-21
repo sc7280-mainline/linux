@@ -34,6 +34,219 @@
 struct goodix_module goodix_modules;
 int core_module_prob_sate = CORE_MODULE_UNPROBED;
 
+/*Add by T2M-mingwu.zhang for FP5-187 remarks: Touch parameter scene differentiation.[Begin]*/
+#ifdef CONFIG_PROJECT_FP5
+static int usb_if_err=0;
+static bool tp_if_exist=false;
+static bool tp_if_suspend=false;
+struct goodix_ts_core *global_core_data;
+const u32 CUSTOM_ADDR= 0x10180;
+const static unsigned char CUSTOM_USB_ONLINE_BUF[2][6]=
+{
+	{0x00, 0x00, 0x04, 0x10, 0x14, 0x00},
+    {0x00, 0x00, 0x04, 0x11, 0x15, 0x00},
+};
+const static unsigned char CUSTOM_SCREEN_BUF[3][8]=
+{
+	{0x00, 0x00, 0x06, 0x17, 0x30, 0x00, 0x4D, 0x00},
+	{0x00, 0x00, 0x06, 0x17, 0x70, 0x01, 0x8E, 0x00},
+	{0x00, 0x00, 0x06, 0x17, 0xB0, 0x01, 0xCE, 0x00},
+};
+
+static DEFINE_MUTEX(config_type_mutex);
+static int goodix_ts_switch_config(struct goodix_ts_core *cd, enum GOODIX_IC_CONFIG_TYPE type)
+{
+	struct goodix_ts_hw_ops *hw_ops = cd->hw_ops;
+	struct goodix_ic_config *cfg = NULL;
+	int ret = -EFAULT;
+
+	cfg = cd->ic_configs[type];
+	if (!cfg || cfg->len <= 0) {
+		ts_info("no valid config found type %d", type);
+		return -EINVAL;
+	}
+
+//	mutex_lock(&config_type_mutex);
+	hw_ops->irq_enable(cd, false);
+
+	if (hw_ops->send_config) {
+		ret = hw_ops->send_config(cd, cfg->data, cfg->len);
+		if (!ret)
+			cd->config_type = type;
+	}
+
+	if (type == CFG_TYPE_CHARGE) {
+		ts_debug("ready for sending charge cmd ......");
+		ret = cd->hw_ops->write(cd,
+								CUSTOM_ADDR,
+								(unsigned char *)&CUSTOM_USB_ONLINE_BUF[GOODIX_CUSTOM_CHARGE_CMD],
+								sizeof(CUSTOM_USB_ONLINE_BUF[GOODIX_CUSTOM_CHARGE_CMD]));
+		if(ret)
+			ts_debug("goodix write charge command error,ret=[%d]!",ret);
+	} else {
+		ts_debug("ready for sending nochange cmd ......");
+		ret = cd->hw_ops->write(cd,
+								CUSTOM_ADDR,
+								(unsigned char *)&CUSTOM_USB_ONLINE_BUF[GOODIX_CUSTOM_NONCHARGE_CMD],
+								sizeof(CUSTOM_USB_ONLINE_BUF[GOODIX_CUSTOM_NONCHARGE_CMD]));
+		if(ret)
+			ts_debug("goodix write noncharge command error,ret=[%d]!",ret);		
+	}
+
+	hw_ops->irq_enable(cd, true);
+//	mutex_unlock(&config_type_mutex);
+
+	return ret;
+}
+
+/* set work mode */
+static ssize_t goodix_ts_config_type_store(struct device *dev,
+						struct device_attribute *attr,
+						const char *buf, size_t count)
+{
+	struct goodix_ts_core *core_data = dev_get_drvdata(dev);
+	enum GOODIX_IC_CONFIG_TYPE type;
+	long result;
+	int ret;
+
+	if (kstrtol(buf, 0, &result)) {
+		ts_err("faield get config type");
+		return -EFAULT;
+	}
+	if (result >= GOODIX_MAX_CONFIG_GROUP || result < 0) {
+		ts_err("unsupported config type %ld", result);
+		return -EINVAL;
+	}
+	type = (enum GOODIX_IC_CONFIG_TYPE)result;
+
+	ret = goodix_ts_switch_config(core_data, type);
+	if (ret) {
+		ts_err("failed switch to config type %d", type);
+		ret = -EINVAL;
+	} else {
+		ts_info("success switch to config type %d", type);
+	}
+
+	return ret ? -EINVAL : count;
+}
+
+static void goodix_tpusb_online(struct work_struct *work)
+{
+	struct goodix_ts_core *cd =
+			container_of(work, struct goodix_ts_core, tpusb_online_work);
+	int ret = 0;
+
+	mutex_lock(&config_type_mutex);
+
+	if(tp_if_suspend != false)
+		goto Nothing_happened;
+
+	ts_err("usb_online=[%d]!\n",atomic_read(&cd->usb_online));
+
+	if(atomic_read(&cd->usb_online)){
+		ret = goodix_ts_switch_config(cd, (enum GOODIX_IC_CONFIG_TYPE)CFG_TYPE_CHARGE);			//charging mode
+		if(ret)
+			ts_debug("goodix switch charge config error,ret=[%d]!",ret);									
+	}else{
+		ret = goodix_ts_switch_config(cd, (enum GOODIX_IC_CONFIG_TYPE)CFG_TYPE_NON_CHARGE);		//Non charging mode
+		if(ret)
+			ts_debug("goodix switch noncharge config error,ret=[%d]!",ret);										
+	}
+
+	if(ret){
+		if(usb_if_err){
+			usb_if_err = -EAGAIN; //recover error flage
+			ts_err("resume touch config fail, keep error flage=[%d]!\n",usb_if_err);
+		}else{
+			usb_if_err = -EPERM;
+			ts_err("usb touch config fail, error flage=[%d]!\n",usb_if_err);
+		}
+	}else{
+		usb_if_err = 0;
+		ts_info("Regardless of the previous state, as long as the switch is successful, it will be cleared...");
+	}
+
+Nothing_happened:
+	mutex_unlock(&config_type_mutex);	
+}
+
+static DEFINE_MUTEX(usb_online_mutex);
+void tp_get_usb_online(int online)
+{
+	mutex_lock(&usb_online_mutex);
+	if(tp_if_exist != true){
+		ts_err("The specified touch panel does not exist!\n");
+		goto non_exist;
+	} 
+
+	if (atomic_read(&global_core_data->usb_online) != online){
+		atomic_set(&global_core_data->usb_online,online);
+		schedule_work(&global_core_data->tpusb_online_work);		
+	}else
+		ts_info("tp get usb online ,state is same not changed! \n");
+
+non_exist:
+	ts_debug("USB online finish,tp_if_exist=[%d]\n",tp_if_exist);
+	mutex_unlock(&usb_online_mutex);	
+}
+EXPORT_SYMBOL_GPL(tp_get_usb_online);
+
+static u8 screen_mode=0;
+/* screen mode show */
+static ssize_t goodix_ts_screen_mode_show(struct device *dev,
+				       struct device_attribute *attr,
+				       char *buf)
+{
+	int cnt = 0;
+
+	cnt = snprintf(buf, PAGE_SIZE, "screen mode:%s\n",
+	screen_mode==0 ? "VERTICAL" : screen_mode==1 ? "HORIZONTAL_90" : "HORIZONTAL_270");
+
+	return cnt;
+}
+
+/* screen mode store */
+static ssize_t goodix_ts_screen_mode_store(struct device *dev,
+					struct device_attribute *attr,
+					const char *buf, size_t count)
+{
+	struct goodix_ts_core *core_data = dev_get_drvdata(dev);
+	struct goodix_ts_hw_ops *hw_ops = core_data->hw_ops;
+	int ret = 0;
+
+	if (!buf || count <= 0)
+		return -EINVAL;
+
+	if (buf[0] == '0'){
+		screen_mode = GOODIX_CUSTOM_VERTICAL_SCREEN_CMD;
+		ret = hw_ops->write(core_data,
+							CUSTOM_ADDR,
+							(unsigned char *)&CUSTOM_SCREEN_BUF[GOODIX_CUSTOM_VERTICAL_SCREEN_CMD],
+							sizeof(CUSTOM_SCREEN_BUF[GOODIX_CUSTOM_VERTICAL_SCREEN_CMD]));
+		ts_info("The current mode is VERTICAL!\n");							
+	}else if(buf[0] == '1'){
+		screen_mode = GOODIX_CUSTOM_HORIZONTAL_90_SCREEN_CMD;
+		ret = hw_ops->write(core_data,
+							CUSTOM_ADDR,
+							(unsigned char *)&CUSTOM_SCREEN_BUF[GOODIX_CUSTOM_HORIZONTAL_90_SCREEN_CMD],
+							sizeof(CUSTOM_SCREEN_BUF[GOODIX_CUSTOM_HORIZONTAL_90_SCREEN_CMD]));
+		ts_info("The current mode is HORIZONTAL_90!\n");
+	}else if(buf[0] == '2'){
+		screen_mode = GOODIX_CUSTOM_HORIZONTAL_270_SCREEN_CMD;
+		ret = hw_ops->write(core_data,
+							CUSTOM_ADDR,
+							(unsigned char *)&CUSTOM_SCREEN_BUF[GOODIX_CUSTOM_HORIZONTAL_270_SCREEN_CMD],
+							sizeof(CUSTOM_SCREEN_BUF[GOODIX_CUSTOM_HORIZONTAL_270_SCREEN_CMD]));
+		ts_info("The current mode is HORIZONTAL_270!\n");					
+	}else{
+		ts_err("Invalid parameter value!\n");
+	}
+
+	return count;
+}
+#endif
+/*Add by T2M-mingwu.zhang [End]*/
+
 #if IS_ENABLED(CONFIG_DRM)
 #include <drm/drm_panel.h>
 struct drm_panel *gdix_active_panel;
@@ -847,6 +1060,10 @@ static DEVICE_ATTR(debug_log, 0664,
 		goodix_ts_debug_log_show, goodix_ts_debug_log_store);
 static DEVICE_ATTR(die_info, 0440,
 		die_info_show, NULL);
+static DEVICE_ATTR(config_type, 0220,
+		NULL, goodix_ts_config_type_store);
+static DEVICE_ATTR(screen_mode, 0664,
+		goodix_ts_screen_mode_show, goodix_ts_screen_mode_store);		
 
 static struct attribute *sysfs_attrs[] = {
 	&dev_attr_driver_info.attr,
@@ -859,6 +1076,8 @@ static struct attribute *sysfs_attrs[] = {
 	&dev_attr_esd_info.attr,
 	&dev_attr_debug_log.attr,
 	&dev_attr_die_info.attr,
+	&dev_attr_config_type.attr,
+	&dev_attr_screen_mode.attr,
 	NULL,
 };
 
@@ -1750,20 +1969,12 @@ static int goodix_esd_notifier_callback(struct notifier_block *nb,
 	switch (action) {
 	case NOTIFY_FWUPDATE_START:
 	case NOTIFY_SUSPEND:
-ts_err("zmw---SUSPEND");	
-/*Add by T2M-mingwu.zhang for FP5-195 remarks: Double click on driver update.[Begin]*/	
-//		goodix_ts_power_off(ts_esd->ts_core);
-/*Add by T2M-mingwu.zhang [End]*/
-		break;		
 	case NOTIFY_ESD_OFF:
 		goodix_ts_esd_off(ts_esd->ts_core);
 		break;
 	case NOTIFY_FWUPDATE_FAILED:
 	case NOTIFY_FWUPDATE_SUCCESS:
 	case NOTIFY_RESUME:
-ts_err("zmw---RESUME");	
-		goodix_ts_power_on(ts_esd->ts_core);
-		break;	
 	case NOTIFY_ESD_ON:
 		goodix_ts_esd_on(ts_esd->ts_core);
 		break;
@@ -1874,12 +2085,10 @@ static int goodix_ts_suspend(struct goodix_ts_core *core_data)
 
 	/* enter sleep mode or power off */
 	if (core_data->board_data.sleep_enable)
-		hw_ops->suspend(core_data);
-/*Add by T2M-mingwu.zhang for FP5-195 remarks: Double click on driver update.[Begin]*/	
-/* 	else
-		goodix_ts_power_off(core_data); */
-/*Add by T2M-mingwu.zhang [End]*/		
-
+		hw_ops->suspend(core_data);	
+	else
+		goodix_ts_power_off(core_data);
+		
 	/* inform exteranl modules */
 	mutex_lock(&goodix_modules.mutex);
 	if (!list_empty(&goodix_modules.head)) {
@@ -1902,6 +2111,13 @@ static int goodix_ts_suspend(struct goodix_ts_core *core_data)
 
 out:
 	goodix_ts_release_connects(core_data);
+/*Add by T2M-mingwu.zhang for FP5-187 remarks: Touch parameter scene differentiation.[Begin]*/
+#ifdef CONFIG_PROJECT_FP5
+	usb_if_err = -EPERM;
+	tp_if_suspend = true;
+	ts_err("usb_if_err=[%d],tp_if_suspend=[%d]",usb_if_err,tp_if_suspend);
+#endif
+/*Add by T2M-mingwu.zhang [End]*/
 	ts_info("Suspend end");
 	return 0;
 }
@@ -1949,6 +2165,10 @@ static int goodix_ts_resume(struct goodix_ts_core *core_data)
 	else
 		goodix_ts_power_on(core_data);
 
+	/* recover config */
+/* 	if (core_data->config_type != CONFIG_TYPE_NORMAL)
+		goodix_ts_switch_config(core_data, core_data->config_type); */
+
 	mutex_lock(&goodix_modules.mutex);
 	if (!list_empty(&goodix_modules.head)) {
 		list_for_each_entry_safe(ext_module, next,
@@ -1969,6 +2189,12 @@ static int goodix_ts_resume(struct goodix_ts_core *core_data)
 	mutex_unlock(&goodix_modules.mutex);
 
 out:
+/*Add by T2M-mingwu.zhang for FP5-187 remarks: Touch parameter scene differentiation.[Begin]*/
+	if(tp_if_suspend && (tp_if_exist != false)){	
+		tp_if_suspend = false;	
+		schedule_work(&global_core_data->tpusb_online_work);		
+	}
+/*Add by T2M-mingwu.zhang [End]*/
 	/* enable irq */
 	hw_ops->irq_enable(core_data, true);
 	/* open esd */
@@ -2197,6 +2423,16 @@ int goodix_ts_stage2_init(struct goodix_ts_core *cd)
 	INIT_WORK(&cd->self_check_work, goodix_self_check);
 	schedule_work(&cd->self_check_work);
 
+/*Add by T2M-mingwu.zhang for FP5-187 remarks: Touch parameter scene differentiation.[Begin]*/
+#ifdef CONFIG_PROJECT_FP5
+	INIT_WORK(&cd->tpusb_online_work, goodix_tpusb_online);
+	global_core_data = cd;
+	atomic_set(&cd->usb_online,CFG_TYPE_CHARGE);
+	screen_mode = GOODIX_CUSTOM_VERTICAL_SCREEN_CMD;
+	tp_if_exist=true;
+#endif
+/*Add by T2M-mingwu.zhang [End]*/
+
 	return 0;
 exit:
 	goodix_ts_pen_dev_remove(cd);
@@ -2287,6 +2523,18 @@ static int goodix_later_init_thread(void *data)
 	 * if not we will send config with interactive mode
 	 */
 	goodix_send_ic_config(cd, CONFIG_TYPE_NORMAL);
+	cd->config_type = CONFIG_TYPE_NORMAL;
+
+/*Add by T2M-mingwu.zhang for FP5-187 remarks: Touch parameter scene differentiation.[Begin]*/
+#ifdef CONFIG_PROJECT_FP5
+	ret = cd->hw_ops->write(cd,
+							CUSTOM_ADDR,
+							(unsigned char *)&CUSTOM_USB_ONLINE_BUF[GOODIX_CUSTOM_CHARGE_CMD],
+							sizeof(CUSTOM_USB_ONLINE_BUF[GOODIX_CUSTOM_CHARGE_CMD]));
+	if(ret)
+		ts_err("goodix write charge command error,ret=[%d]!",ret);
+#endif
+/*Add by T2M-mingwu.zhang [End]*/		
 
 	/* init other resources */
 	ret = goodix_ts_stage2_init(cd);
