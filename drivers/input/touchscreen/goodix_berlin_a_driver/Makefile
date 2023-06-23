@@ -1,3 +1,4 @@
+ccflags-y += -DCONFIG_PROJECT_FP5
 obj-$(CONFIG_TOUCHSCREEN_GOODIX_BRL) += goodix_core.o
 goodix_core-y := \
 				goodix_brl_i2c.o \
