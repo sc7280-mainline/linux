@@ -140,6 +140,7 @@
 		gpio = <&tlmm 157 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		vin-supply = <&vreg_bob>;
+		regulator-always-on; // FIXME
 	};
 
 	ois_dvdd_1p1: regulator-ois-dvdd-1p1 {
@@ -150,6 +151,7 @@
 		gpio = <&tlmm 97 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		vin-supply = <&vreg_s8b>;
+		regulator-always-on; // FIXME
 	};
 
 	afvdd_2p8: regulator-afvdd-2p8 {
@@ -160,6 +162,34 @@
 		gpio = <&tlmm 68 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		vin-supply = <&vreg_bob>;
+		regulator-always-on; // FIXME
+	};
+
+	fake-reg-mclk0 {
+		compatible = "regulator-fixed-clock";
+		regulator-name = "fake-reg-mclk0";
+		pinctrl-names = "default";
+		pinctrl-0 = <&cam_mclk0_default>;
+		clocks = <&camcc CAM_CC_MCLK0_CLK>;
+		regulator-always-on;
+	};
+
+	fake-reg-mclk1 {
+		compatible = "regulator-fixed-clock";
+		regulator-name = "fake-reg-mclk1";
+		pinctrl-names = "default";
+		pinctrl-0 = <&cam_mclk1_default>;
+		clocks = <&camcc CAM_CC_MCLK1_CLK>;
+		regulator-always-on;
+	};
+
+	fake-reg-mclk3 {
+		compatible = "regulator-fixed-clock";
+		regulator-name = "fake-reg-mclk3";
+		pinctrl-names = "default";
+		pinctrl-0 = <&cam_mclk3_default>;
+		clocks = <&camcc CAM_CC_MCLK3_CLK>;
+		regulator-always-on;
 	};
 
 	thermal-zones {
@@ -637,6 +667,7 @@
 	regulator-min-microvolt = <1000000>;
 	regulator-max-microvolt = <1200000>;
 	regulator-min-dropout-voltage-microvolt = <160000>;
+	regulator-always-on; // FIXME
 };
 
 &pm8008_l2 {
@@ -646,18 +677,21 @@
 	   include exactly 1.15V, just 1.152V */
 	regulator-max-microvolt = <1152000>;
 	regulator-min-dropout-voltage-microvolt = <128000>;
+	regulator-always-on; // FIXME
 };
 
 &pm8008_l3 {
 	regulator-min-microvolt = <2700000>;
 	regulator-max-microvolt = <3000000>;
 	regulator-min-dropout-voltage-microvolt = <144000>;
+	regulator-always-on; // FIXME
 };
 
 &pm8008_l4 {
 	regulator-min-microvolt = <2700000>;
 	regulator-max-microvolt = <2900000>;
 	regulator-min-dropout-voltage-microvolt = <128000>;
+	regulator-always-on; // FIXME
 };
 
 &pm8008_l5 {
@@ -665,6 +699,7 @@
 	regulator-min-microvolt = <2704000>;
 	regulator-max-microvolt = <2900000>;
 	regulator-min-dropout-voltage-microvolt = <128000>;
+	regulator-always-on; // FIXME
 };
 
 &pm8008_l6 {
@@ -672,12 +707,14 @@
 	/* Downstream max voltage: 1.9V. See comment at pm8008_l2 */
 	regulator-max-microvolt = <1904000>;
 	regulator-min-dropout-voltage-microvolt = <136000>;
+	regulator-always-on; // FIXME CCI pull-up regulator
 };
 
 &pm8008_l7 {
 	regulator-min-microvolt = <2700000>;
 	regulator-max-microvolt = <3000000>;
 	regulator-min-dropout-voltage-microvolt = <312000>;
+	regulator-always-on; // FIXME
 };
 
 &pm8350c_flash {
@@ -888,6 +925,27 @@
 		pins = "gpio85";
 		function = "gpio";
 		output-low;
+		bias-disable;
+	};
+
+	cam_mclk0_default: cam-mclk0-default-state {
+		pins = "gpio64";
+		function = "cam_mclk";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	cam_mclk1_default: cam-mclk1-default-state {
+		pins = "gpio65";
+		function = "cam_mclk";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	cam_mclk3_default: cam-mclk3-default-state {
+		pins = "gpio67";
+		function = "cam_mclk";
+		drive-strength = <2>;
 		bias-disable;
 	};
 
