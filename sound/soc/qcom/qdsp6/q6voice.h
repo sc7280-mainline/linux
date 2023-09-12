@@ -16,7 +16,7 @@ enum q6voice_path_type {
 
 struct q6voice;
 
-struct q6voice *q6voice_create(struct device *dev);
+struct q6voice *q6voice_create(struct device *dev, bool cvd_v2_3);
 int q6voice_start(struct q6voice *v, enum q6voice_path_type path, bool capture);
 int q6voice_stop(struct q6voice *v, enum q6voice_path_type path, bool capture);
 
