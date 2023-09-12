@@ -341,8 +341,12 @@ static int q6voice_dai_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct q6voice *v;
+	struct device_node *np = dev_of_node(dev);
+	bool cvd_v2_3;
 
-	v = q6voice_create(dev);
+	cvd_v2_3 = of_property_read_bool(np, "qcom,cvd-v2.3");
+
+	v = q6voice_create(dev, cvd_v2_3);
 	if (IS_ERR(v))
 		return PTR_ERR(v);
 
