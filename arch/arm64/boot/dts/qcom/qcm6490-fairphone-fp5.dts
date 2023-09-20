@@ -714,8 +714,21 @@
 &i2c2 {
 	status = "okay";
 
-	/* AW88261FCR amplifier @ 34 */
-	/* AW88261FCR amplifier @ 35 */
+	aw88261_l: audio-codec@34 {
+		compatible = "awinic,aw88261";
+		reg = <0x34>;
+		awinic,audio-channel = <0>;
+		awinic,sync-flag;
+		#sound-dai-cells = <0>;
+	};
+
+	aw88261_r: audio-codec@35 {
+		compatible = "awinic,aw88261";
+		reg = <0x35>;
+		awinic,audio-channel = <1>;
+		awinic,sync-flag;
+		#sound-dai-cells = <0>;
+	};
 };
 
 &i2c4 {
