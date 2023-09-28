@@ -146,6 +146,34 @@
 		vin-supply = <&vreg_s8b>;
 	};
 
+	vreg_oled_dvdd: regulator-oled-dvdd {
+		compatible = "regulator-fixed";
+		regulator-name = "oled_dvdd";
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+
+		gpio = <&tlmm 51 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+
+		vin-supply = <&vreg_s1b>;
+
+		regulator-boot-on;
+	};
+
+	vreg_oled_vci: regulator-oled-vci {
+		compatible = "regulator-fixed";
+		regulator-name = "oled_vci";
+		regulator-min-microvolt = <3000000>;
+		regulator-max-microvolt = <3000000>;
+
+		gpio = <&pm8350c_gpios 7 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+
+		vin-supply = <&vreg_l13c>;
+
+		regulator-boot-on;
+	};
+
 	vreg_usb_redrive_1v8: regulator-usb-redrive-1v8 {
 		compatible = "regulator-fixed";
 		regulator-name = "USB_REDRIVE_1V8";
@@ -598,11 +626,6 @@
 	/* S5KJN1SQ03 @ 10 */
 };
 
-&dispcc {
-	/* Disable for now so simple-framebuffer continues working */
-	status = "disabled";
-};
-
 &gcc {
 	protected-clocks = <GCC_CFG_NOC_LPASS_CLK>,
 			   <GCC_EDP_CLKREF_EN>,
@@ -805,6 +828,42 @@
 &mdss_dp_out {
 	data-lanes = <0 1>;
 	remote-endpoint = <&usb_dp_qmpphy_dp_in>;
+};
+
+&mdss_dsi {
+	vdda-supply = <&vreg_l6b>;
+	status = "okay";
+
+	panel@0 {
+		compatible = "fairphone,fp5-rm692e5-boe", "raydium,rm692e5";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 44 GPIO_ACTIVE_LOW>;
+
+		vci-supply = <&vreg_oled_vci>;
+		vddio-supply = <&vreg_l12c>;
+		dvdd-supply = <&vreg_oled_dvdd>;
+
+		pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;
+		pinctrl-1 = <&sde_dsi_sleep &sde_te_active_sleep>;
+		pinctrl-names = "default", "sleep";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi_phy {
+	vdds-supply = <&vreg_l10c>;
+	status = "okay";
 };
 
 &pm7250b_adc {
@@ -1176,6 +1235,27 @@
 	sw_ctrl_default: sw-ctrl-default-state {
 		pins = "gpio86";
 		function = "gpio";
+		bias-pull-down;
+	};
+
+	sde_dsi_active: sde_dsi_active-state {
+		pins = "gpio44";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
+
+	sde_dsi_sleep: sde-dsi-sleep-state {
+		pins = "gpio44";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	sde_te_active_sleep: sde_te_active-state {
+		pins = "gpio80";
+		function = "mdp_vsync";
+		drive-strength = <2>;
 		bias-pull-down;
 	};
 
