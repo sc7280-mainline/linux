@@ -189,6 +189,7 @@
 		regulator-always-on; // FIXME
 	};
 
+/*
 	fake-reg-mclk0 {
 		compatible = "regulator-fixed-clock";
 		regulator-name = "fake-reg-mclk0";
@@ -197,7 +198,7 @@
 		clocks = <&camcc CAM_CC_MCLK0_CLK>;
 		regulator-always-on;
 	};
-
+*/
 	fake-reg-mclk1 {
 		compatible = "regulator-fixed-clock";
 		regulator-name = "fake-reg-mclk1";
@@ -622,12 +623,61 @@
 	};
 };
 
+&camss {
+	vdda-phy-supply = <&vreg_l10c>;
+	vdda-pll-supply = <&vreg_l6b>;
+
+	status = "okay";
+
+	ports {
+		port@0 {
+			reg = <0>;
+			csiphy0_ep: endpoint {
+				clock-lanes = <1>;
+				data-lanes = <0 2 3 4>;
+				remote-endpoint = <&camera_imx800_ep>;
+				status = "okay";
+			};
+		};
+	};
+};
+
 &cci0 {
 	status = "okay";
 };
 
 &cci0_i2c0 {
-	/* IMX800 @ 1a */
+	imx800@1a {
+		compatible = "sony,imx800";
+		reg = <0x1a>;
+
+/*
+		vana1-supply = <&pm8008_l5>;
+		vana2-supply = <&ois_avdd0_1p8>;
+		vdig-supply = <&ois_dvdd_1p1>;
+		vif-supply = <&pm8008_l6>;
+*/
+
+		clocks = <&camcc CAM_CC_MCLK0_CLK>;
+		assigned-clocks = <&camcc CAM_CC_MCLK0_CLK>;
+		assigned-clock-rates = <24000000>;
+
+		reset-gpios = <&tlmm 20 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&cam_mclk0_default>;
+
+		orientation = <1>;
+
+		port {
+			camera_imx800_ep: endpoint {
+				clock-lanes = <1>;
+				data-lanes = <0 2 3 4>;
+				link-frequencies = /bits/ 64 <600000000>;
+				bus-type = <4>;
+				remote-endpoint = <&csiphy0_ep>;
+			};
+		};
+	};
 };
 
 &cci0_i2c1 {
