@@ -1012,6 +1012,7 @@ static int imx800_set_ctrl(struct v4l2_ctrl *ctrl)
 
 	state = v4l2_subdev_get_locked_active_state(&imx800->sd);
 	format = v4l2_subdev_get_pad_format(&imx800->sd, state, 0);
+	dev_info(&client->dev, "imx800_set_ctrl %x\n", ctrl->id);
 
 	if (ctrl->id == V4L2_CID_VBLANK) {
 		int exposure_max, exposure_def;
@@ -1035,16 +1036,16 @@ static int imx800_set_ctrl(struct v4l2_ctrl *ctrl)
 
 	switch (ctrl->id) {
 	case V4L2_CID_ANALOGUE_GAIN:
-		cci_write(imx800->regmap, IMX800_REG_ANALOG_GAIN,
-			  ctrl->val, &ret);
+//		cci_write(imx800->regmap, IMX800_REG_ANALOG_GAIN,
+//			  ctrl->val, &ret);
 		break;
 	case V4L2_CID_EXPOSURE:
-		cci_write(imx800->regmap, IMX800_REG_EXPOSURE,
-			  ctrl->val, &ret);
+//		cci_write(imx800->regmap, IMX800_REG_EXPOSURE,
+//			  ctrl->val, &ret);
 		break;
 	case V4L2_CID_DIGITAL_GAIN:
-		cci_write(imx800->regmap, IMX800_REG_DIGITAL_GAIN,
-			  ctrl->val, &ret);
+//		cci_write(imx800->regmap, IMX800_REG_DIGITAL_GAIN,
+//			  ctrl->val, &ret);
 		break;
 	case V4L2_CID_TEST_PATTERN:
 		cci_write(imx800->regmap, IMX800_REG_TEST_PATTERN,
@@ -1056,8 +1057,8 @@ static int imx800_set_ctrl(struct v4l2_ctrl *ctrl)
 			  imx800->hflip->val | imx800->vflip->val << 1, &ret);
 		break;
 	case V4L2_CID_VBLANK:
-		cci_write(imx800->regmap, IMX800_REG_VTS,
-			  format->height + ctrl->val, &ret);
+//		cci_write(imx800->regmap, IMX800_REG_VTS,
+//			  format->height + ctrl->val, &ret);
 		break;
 	case V4L2_CID_TEST_PATTERN_RED:
 		cci_write(imx800->regmap, IMX800_REG_TESTP_RED,
@@ -1101,6 +1102,7 @@ static int imx800_init_controls(struct imx800 *imx800)
 	struct v4l2_fwnode_device_properties props;
 	int exposure_max, exposure_def, hblank;
 	int i, ret;
+	dev_err(&client->dev, "imx800_init_controls\n");
 
 	ctrl_hdlr = &imx800->ctrl_handler;
 	ret = v4l2_ctrl_handler_init(ctrl_hdlr, 12);
@@ -1197,11 +1199,13 @@ static int imx800_init_controls(struct imx800 *imx800)
 		goto error;
 
 	imx800->sd.ctrl_handler = ctrl_hdlr;
+	dev_info(&client->dev, "imx800_init_controls ok\n");
 
 	return 0;
 
 error:
 	v4l2_ctrl_handler_free(ctrl_hdlr);
+	dev_info(&client->dev, "imx800_init_controls failed %i\n", ret);
 
 	return ret;
 }
@@ -1221,6 +1225,7 @@ static int imx800_start_streaming(struct imx800 *imx800,
 	struct i2c_client *client = v4l2_get_subdevdata(&imx800->sd);
 	const struct imx800_reg_list *reg_list;
 	int ret;
+	dev_info(&client->dev, "imx800_start_streaming\n");
 
 	ret = pm_runtime_resume_and_get(&client->dev);
 	if (ret < 0)
@@ -1258,10 +1263,12 @@ static int imx800_start_streaming(struct imx800 *imx800,
 	__v4l2_ctrl_grab(imx800->vflip, true);
 	__v4l2_ctrl_grab(imx800->hflip, true);
 
+	dev_info(&client->dev, "imx800_start_streaming ok\n");
 	return 0;
 
 err_rpm_put:
 	pm_runtime_put(&client->dev);
+	dev_info(&client->dev, "imx800_start_streaming failed %i\n", ret);
 	return ret;
 }
 
@@ -1269,6 +1276,7 @@ static void imx800_stop_streaming(struct imx800 *imx800)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(&imx800->sd);
 	int ret;
+	dev_info(&client->dev, "imx800_stop_streaming\n");
 
 	/* set stream off register */
 	ret = cci_write(imx800->regmap, IMX800_REG_MODE_SELECT,
@@ -1287,6 +1295,7 @@ static int imx800_set_stream(struct v4l2_subdev *sd, int enable)
 	struct imx800 *imx800 = to_imx800(sd);
 	struct v4l2_subdev_state *state;
 	int ret = 0;
+	dev_info(sd->dev, "imx800_set_stream\n");
 
 	state = v4l2_subdev_lock_and_get_active_state(sd);
 
@@ -1319,6 +1328,7 @@ static int imx800_enum_mbus_code(struct v4l2_subdev *sd,
 				 struct v4l2_subdev_mbus_code_enum *code)
 {
 	struct imx800 *imx800 = to_imx800(sd);
+	dev_info(sd->dev, "imx800_enum_mbus_code\n");
 
 	if (code->index >= (ARRAY_SIZE(imx800_mbus_formats) / 4))
 		return -EINVAL;
@@ -1334,6 +1344,7 @@ static int imx800_enum_frame_size(struct v4l2_subdev *sd,
 {
 	struct imx800 *imx800 = to_imx800(sd);
 	u32 code;
+	dev_info(sd->dev, "imx800_enum_frame_size\n");
 
 	if (fse->index >= ARRAY_SIZE(supported_modes))
 		return -EINVAL;
@@ -1359,6 +1370,7 @@ static int imx800_set_pad_format(struct v4l2_subdev *sd,
 	struct v4l2_mbus_framefmt *format;
 	struct v4l2_rect *crop;
 	unsigned int bin_h, bin_v;
+	dev_info(sd->dev, "imx800_set_pad_format\n");
 
 	mode = v4l2_find_nearest_size(supported_modes,
 				      ARRAY_SIZE(supported_modes),
@@ -1421,6 +1433,7 @@ static int imx800_get_selection(struct v4l2_subdev *sd,
 				struct v4l2_subdev_state *state,
 				struct v4l2_subdev_selection *sel)
 {
+	dev_info(sd->dev, "imx800_get_selection\n");
 	switch (sel->target) {
 	case V4L2_SEL_TGT_CROP: {
 		sel->r = *v4l2_subdev_get_pad_crop(sd, state, 0);
@@ -1501,6 +1514,7 @@ static int imx800_power_on(struct device *dev)
 	struct imx800 *imx800 = to_imx800(sd);
 	int ret;
 
+	dev_info(dev, "imx800_power_on\n");
 	ret = regulator_bulk_enable(IMX800_NUM_SUPPLIES,
 				    imx800->supplies);
 	if (ret) {
@@ -1532,6 +1546,7 @@ static int imx800_power_off(struct device *dev)
 {
 	struct v4l2_subdev *sd = dev_get_drvdata(dev);
 	struct imx800 *imx800 = to_imx800(sd);
+	dev_info(dev, "imx800_power_off\n");
 
 	gpiod_set_value_cansleep(imx800->reset_gpio, 1);
 	regulator_bulk_disable(IMX800_NUM_SUPPLIES, imx800->supplies);
@@ -1600,11 +1615,12 @@ static int imx800_check_hwcfg(struct device *dev, struct imx800 *imx800)
 	}
 
 	/* Check the number of MIPI CSI2 data lanes */
+/*
 	if (ep_cfg.bus.mipi_csi2.num_data_lanes != 4) {
 		dev_err(dev, "only 4 data lanes are currently supported\n");
 		goto error_out;
 	}
-
+*/
 	/* Check the link frequency set in device tree */
 	if (!ep_cfg.nr_of_link_frequencies) {
 		dev_err(dev, "link-frequency property not found in DT\n");
