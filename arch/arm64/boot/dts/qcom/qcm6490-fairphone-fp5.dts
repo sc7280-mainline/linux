@@ -207,7 +207,7 @@
 		clocks = <&camcc CAM_CC_MCLK1_CLK>;
 		regulator-always-on;
 	};
-
+/*
 	fake-reg-mclk3 {
 		compatible = "regulator-fixed-clock";
 		regulator-name = "fake-reg-mclk3";
@@ -216,7 +216,7 @@
 		clocks = <&camcc CAM_CC_MCLK3_CLK>;
 		regulator-always-on;
 	};
-
+*/
 	usb_redrive_1v8: regulator-usb-redrive-1v8 {
 		compatible = "regulator-fixed";
 		regulator-name = "USB_REDRIVE_1V8";
@@ -639,6 +639,15 @@
 				status = "okay";
 			};
 		};
+		port@3 {
+			reg = <3>;
+			csiphy3_ep: endpoint {
+				clock-lanes = <1>;
+				data-lanes = <0 2 3 4>;
+				remote-endpoint = <&camera_s5kjn1_ep>;
+				status = "okay";
+			};
+		};
 	};
 };
 
@@ -690,6 +699,38 @@
 
 &cci1_i2c1 {
 	/* S5KJN1SQ03 @ 10 */
+
+	s5kjn1@10 {
+		compatible = "samsung,s5kjn1";
+		reg = <0x10>;
+
+/*
+VREG_L2P_0P9(DVDD) + VREG_L3P_2P2(AVDD) + VREG_L6P_1P8(IOVDD)
+		avdd-supply = <&pm8008_l3>;
+		dovdd-supply = <&pm8008_l6>;
+		dvdd-supply = <&pm8008_l2>;
+*/
+
+		clocks = <&camcc CAM_CC_MCLK3_CLK>;
+		assigned-clocks = <&camcc CAM_CC_MCLK3_CLK>;
+		assigned-clock-rates = <24000000>;
+
+		reset-gpios = <&tlmm 78 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&cam_mclk3_default>;
+
+		orientation = <0>;
+
+		port {
+			camera_s5kjn1_ep: endpoint {
+				clock-lanes = <1>;
+				data-lanes = <0 2 3 4>;
+				link-frequencies = /bits/ 64 <828000000>;
+				bus-type = <4>;
+				remote-endpoint = <&csiphy3_ep>;
+			};
+		};
+	};
 };
 
 &gcc {
