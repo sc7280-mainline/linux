@@ -67,7 +67,7 @@
 #define S5KJN1_VBLANK_MIN		4
 
 /* HBLANK control - read only */
-#define S5KJN1_PPL_DEFAULT		3448
+#define S5KJN1_PPL_DEFAULT		0x11e8
 
 #define S5KJN1_REG_ORIENTATION		CCI_REG8(0x0101)
 
@@ -785,16 +785,16 @@ static int s5kjn1_start_streaming(struct s5kjn1 *s5kjn1,
 		goto err_rpm_put;
 	}
 */
-	ret = cci_write(s5kjn1->regmap, 0x6028, 0x4000, NULL);
-	ret = cci_write(s5kjn1->regmap, 0x0000, 0x0003, NULL);
-	ret = cci_write(s5kjn1->regmap, 0x0000, 0x38e1, NULL);
-	ret = cci_write(s5kjn1->regmap, 0x001e, 0x0007, NULL);
-	ret = cci_write(s5kjn1->regmap, 0x6028, 0x4000, NULL);
-	ret = cci_write(s5kjn1->regmap, 0x6010, 0x0001, NULL);
+	ret = cci_write(s5kjn1->regmap, CCI_REG16(0x6028), 0x4000, NULL);
+	ret = cci_write(s5kjn1->regmap, CCI_REG16(0x0000), 0x0003, NULL);
+	ret = cci_write(s5kjn1->regmap, CCI_REG16(0x0000), 0x38e1, NULL);
+	ret = cci_write(s5kjn1->regmap, CCI_REG16(0x001e), 0x0007, NULL);
+	ret = cci_write(s5kjn1->regmap, CCI_REG16(0x6028), 0x4000, NULL);
+	ret = cci_write(s5kjn1->regmap, CCI_REG16(0x6010), 0x0001, NULL);
 
 	usleep_range(5000, 5100);
 
-	ret = cci_write(s5kjn1->regmap, 0x6226, 0x0001, NULL);
+	ret = cci_write(s5kjn1->regmap, CCI_REG16(0x6226), 0x0001, NULL);
 	usleep_range(10000, 10100);
 /*
 	{ CCI_REG16(0x6028), 0x4000 }, // Page pointer HW
@@ -1266,6 +1266,10 @@ static int s5kjn1_probe(struct i2c_client *client)
 	s5kjn1->reset_gpio = devm_gpiod_get_optional(dev, "reset",
 						     GPIOD_OUT_LOW);
 
+
+	/* Request optional enable pin */
+	s5kjn1->pwdn_gpio = devm_gpiod_get_optional(dev, "pwdn",
+						    GPIOD_OUT_HIGH);
 	/*
 	 * The sensor must be powered for s5kjn1_identify_module()
 	 * to be able to read the CHIP_ID register
