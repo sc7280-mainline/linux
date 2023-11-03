@@ -631,21 +631,17 @@
 
 	ports {
 		port@0 {
-			reg = <0>;
 			csiphy0_ep: endpoint {
-				clock-lanes = <1>;
-				data-lanes = <0 2 3 4>;
+				clock-lanes = <7>;
+				data-lanes = <0 1 2 3>;
 				remote-endpoint = <&camera_imx800_ep>;
-				status = "okay";
 			};
 		};
 		port@3 {
-			reg = <3>;
 			csiphy3_ep: endpoint {
-				clock-lanes = <1>;
-				data-lanes = <0 2 3 4>;
+				clock-lanes = <7>;
+				data-lanes = <0 1 2 3>;
 				remote-endpoint = <&camera_s5kjn1_ep>;
-				status = "okay";
 			};
 		};
 	};
@@ -680,9 +676,9 @@
 		port {
 			camera_imx800_ep: endpoint {
 				clock-lanes = <1>;
-				data-lanes = <0 2 3 4>;
+//				data-lanes = <0 2 3 4>;
+				data-lanes = <1 2 3 4>;
 				link-frequencies = /bits/ 64 <600000000>;
-				bus-type = <4>;
 				remote-endpoint = <&csiphy0_ep>;
 			};
 		};
@@ -724,9 +720,9 @@ VREG_L2P_0P9(DVDD) + VREG_L3P_2P2(AVDD) + VREG_L6P_1P8(IOVDD)
 		port {
 			camera_s5kjn1_ep: endpoint {
 				clock-lanes = <1>;
-				data-lanes = <0 2 3 4>;
+//				data-lanes = <0 2 3 4>;
+				data-lanes = <1 2 3 4>;
 				link-frequencies = /bits/ 64 <828000000>;
-				bus-type = <4>;
 				remote-endpoint = <&csiphy3_ep>;
 			};
 		};
