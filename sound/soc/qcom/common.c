@@ -186,8 +186,16 @@ static struct snd_soc_jack_pin qcom_headset_jack_pins[] = {
 	},
 };
 
+static void qcom_snd_hdmi_jack_free(struct snd_jack *hdmi_jack)
+{
+	struct snd_soc_component *component = hdmi_jack->private_data;
+
+	snd_soc_component_set_jack(component, NULL, NULL);
+}
+
 int qcom_snd_wcd_jack_setup(struct snd_soc_pcm_runtime *rtd,
-			    struct snd_soc_jack *jack, bool *jack_setup)
+			    struct snd_soc_jack *jack, bool *jack_setup,
+			    struct snd_soc_jack *hdmi_jack, bool *hdmi_jack_setup)
 {
 	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
 	struct snd_soc_dai *codec_dai = snd_soc_rtd_to_codec(rtd, 0);
@@ -216,6 +224,22 @@ int qcom_snd_wcd_jack_setup(struct snd_soc_pcm_runtime *rtd,
 		*jack_setup = true;
 	}
 
+	if (!*hdmi_jack_setup) {
+		rval = snd_soc_card_jack_new(card, "HDMI Jack",
+					     SND_JACK_LINEOUT,
+					     hdmi_jack);
+
+		if (rval < 0) {
+			dev_err(card->dev, "Unable to add HDMI Jack\n");
+			return rval;
+		}
+
+		hdmi_jack->jack->private_data = codec_dai->component;
+		hdmi_jack->jack->private_free = qcom_snd_hdmi_jack_free;
+
+		*hdmi_jack_setup = true;
+	}
+
 	switch (cpu_dai->id) {
 	case TX_CODEC_DMA_TX_0:
 	case TX_CODEC_DMA_TX_1:
@@ -230,6 +254,14 @@ int qcom_snd_wcd_jack_setup(struct snd_soc_pcm_runtime *rtd,
 			}
 		}
 
+		break;
+	case DISPLAY_PORT_RX:
+		rval = snd_soc_component_set_jack(codec_dai->component,
+						  hdmi_jack, NULL);
+		if (rval != 0 && rval != -ENOTSUPP) {
+			dev_warn(card->dev, "Failed to set hdmi jack: %d\n", rval);
+			return rval;
+		}
 		break;
 	default:
 		break;
