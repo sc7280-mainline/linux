@@ -489,6 +489,7 @@ static const struct adreno_info gpulist[] = {
 			{ 0,   0 },
 			{ 117, 0 },
 			{ 172, 2 }, /* Called speedbin 1 downstream, but let's not break things! */
+			{ 129, 4 },
 			{ 190, 1 },
 		),
 	}, {
