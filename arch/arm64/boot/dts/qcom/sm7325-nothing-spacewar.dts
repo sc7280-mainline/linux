@@ -1407,7 +1407,37 @@
 &spi13 {
 	status = "okay";
 
-	/* focaltech,ft3680 (Touchscreen) @ 0 */
+	focaltech@0 {
+		compatible = "focaltech,fts_ts";
+		reg = <0x0>;
+
+		spi-max-frequency = <6000000>;
+
+		interrupt-parent = <&tlmm>;
+		interrupts = <81 0x2008>;
+		reset-gpios = <&tlmm 105 GPIO_ACTIVE_HIGH>;
+		focaltech,irq-gpio = <&tlmm 81 0x2008>;
+		focaltech,display-coords = <0 0 1080 2400>;
+		focaltech,max-touch-number = <10>;
+		focaltech,ic-type = <0x3658d488>;
+
+		vdd-supply = <&vdd_ts>;
+		iovdd-supply = <&vreg_l8c_1p8>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&ts_int_n>,
+			    <&ts_reset_n>;
+
+		focaltech,trusted-touch-mode = "vm_mode";
+		focaltech,touch-environment = "pvm";
+		focaltech,trusted-touch-spi-irq = <601>;
+		focaltech,trusted-touch-io-bases = <0xf134000 0xf135000
+						    0xf136000 0xf137000
+						    0xf169000 0xf151000
+						    0xa94000 0x00a10000>;
+		focaltech,trusted-touch-io-sizes = <0x1000 0x1000 0x1000 0x1000
+						    0x1000 0x1000 0x1000 0x4000>;
+	};
 };
 
 &tlmm {
@@ -1545,6 +1575,20 @@
 		drive-strength = <2>;
 		bias-pull-down;
 		input-enable;
+	};
+
+	ts_int_n: ts-int-n-state {
+		pins = "gpio81";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	ts_reset_n: ts-reset-n-state {
+		pins = "gpio105";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
 	};
 };
 
