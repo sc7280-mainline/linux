@@ -1543,8 +1543,8 @@
 &spi13 {
 	status = "okay";
 
-	focaltech@0 {
-		compatible = "focaltech,fts_ts";
+	touchscreen@0 {
+		compatible = "focaltech,ft3680";
 		reg = <0x0>;
 
 		spi-max-frequency = <6000000>;
@@ -1555,24 +1555,16 @@
 		focaltech,irq-gpio = <&tlmm 81 0x2008>;
 		focaltech,display-coords = <0 0 1080 2400>;
 		focaltech,max-touch-number = <10>;
-		focaltech,ic-type = <0x3658d488>;
 
 		vdd-supply = <&vdd_ts>;
 		iovdd-supply = <&vreg_l8c_1p8>;
 
+		firmware-name =
+			"qcom/sm7325/nothing/spacewar/focaltech_ts_novatek.bin";
+
 		pinctrl-names = "default";
 		pinctrl-0 = <&ts_int_n>,
 			    <&ts_reset_n>;
-
-		focaltech,trusted-touch-mode = "vm_mode";
-		focaltech,touch-environment = "pvm";
-		focaltech,trusted-touch-spi-irq = <601>;
-		focaltech,trusted-touch-io-bases = <0xf134000 0xf135000
-						    0xf136000 0xf137000
-						    0xf169000 0xf151000
-						    0xa94000 0x00a10000>;
-		focaltech,trusted-touch-io-sizes = <0x1000 0x1000 0x1000 0x1000
-						    0x1000 0x1000 0x1000 0x4000>;
 	};
 };
 
