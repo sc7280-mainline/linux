@@ -542,6 +542,16 @@ config DRM_PANEL_RAYDIUM_RM692E5
 	  Say Y here if you want to enable support for Raydium RM692E5-based
 	  display panels, such as the one found in the Fairphone 5 smartphone.
 
+config DRM_PANEL_VISIONOX_RM692E5_AMOLED_120HZ
+	tristate "Visionox RM692E5 amoled 120hz DSI panel"
+	depends on OF
+	depends on DRM_MIPI_DSI
+	depends on BACKLIGHT_CLASS_DEVICE
+	help
+	  Say Y here if you want to enable support for Visionox RM692E5 amoled
+	  120hz display panels, such as the one found in the Nothing Phone (1)
+	  smartphone.
+
 config DRM_PANEL_RONBO_RB070D30
 	tristate "Ronbo Electronics RB070D30 panel"
 	depends on OF
