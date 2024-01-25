@@ -31,6 +31,12 @@
 /*****************************************************************************
 * Included header files
 *****************************************************************************/
+
+// disable for now as notifier functions using incompatible api
+#undef CONFIG_FB
+#undef CONFIG_DRM
+#undef CONFIG_DRM_PANEL
+
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/of.h>
