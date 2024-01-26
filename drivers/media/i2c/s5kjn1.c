@@ -587,7 +587,7 @@ static int s5kjn1_set_ctrl(struct v4l2_ctrl *ctrl)
 	int ret = 0;
 
 	state = v4l2_subdev_get_locked_active_state(&s5kjn1->sd);
-	format = v4l2_subdev_get_pad_format(&s5kjn1->sd, state, 0);
+	format = v4l2_subdev_state_get_format(state, 0);
 	dev_info(&client->dev, "s5kjn1_set_ctrl %x\n", ctrl->id);
 
 	if (ctrl->id == V4L2_CID_VBLANK) {
@@ -949,7 +949,7 @@ static int s5kjn1_set_pad_format(struct v4l2_subdev *sd,
 
 	s5kjn1_update_pad_format(s5kjn1, mode, &fmt->format, fmt->format.code);
 
-	format = v4l2_subdev_get_pad_format(sd, state, 0);
+	format = v4l2_subdev_state_get_format(state, 0);
 	*format = fmt->format;
 
 	/*
@@ -959,7 +959,7 @@ static int s5kjn1_set_pad_format(struct v4l2_subdev *sd,
 	bin_h = min(S5KJN1_PIXEL_ARRAY_WIDTH / format->width, 2U);
 	bin_v = min(S5KJN1_PIXEL_ARRAY_HEIGHT / format->height, 2U);
 
-	crop = v4l2_subdev_get_pad_crop(sd, state, 0);
+	crop = v4l2_subdev_state_get_crop(state, 0);
 	crop->width = format->width * bin_h;
 	crop->height = format->height * bin_v;
 	crop->left = (S5KJN1_NATIVE_WIDTH - crop->width) / 2;
@@ -1006,7 +1006,7 @@ static int s5kjn1_get_selection(struct v4l2_subdev *sd,
 	dev_info(sd->dev, "s5kjn1_get_selection\n");
 	switch (sel->target) {
 	case V4L2_SEL_TGT_CROP: {
-		sel->r = *v4l2_subdev_get_pad_crop(sd, state, 0);
+		sel->r = *v4l2_subdev_state_get_crop(state, 0);
 		return 0;
 	}
 
@@ -1031,8 +1031,8 @@ static int s5kjn1_get_selection(struct v4l2_subdev *sd,
 	return -EINVAL;
 }
 
-static int s5kjn1_init_cfg(struct v4l2_subdev *sd,
-			   struct v4l2_subdev_state *state)
+static int s5kjn1_init_state(struct v4l2_subdev *sd,
+			     struct v4l2_subdev_state *state)
 {
 	struct v4l2_subdev_format fmt = {
 		.which = V4L2_SUBDEV_FORMAT_TRY,
@@ -1059,7 +1059,6 @@ static const struct v4l2_subdev_video_ops s5kjn1_video_ops = {
 };
 
 static const struct v4l2_subdev_pad_ops s5kjn1_pad_ops = {
-	.init_cfg = s5kjn1_init_cfg,
 	.enum_mbus_code = s5kjn1_enum_mbus_code,
 	.get_fmt = v4l2_subdev_get_fmt,
 	.set_fmt = s5kjn1_set_pad_format,
@@ -1073,6 +1072,9 @@ static const struct v4l2_subdev_ops s5kjn1_subdev_ops = {
 	.pad = &s5kjn1_pad_ops,
 };
 
+static const struct v4l2_subdev_internal_ops s5kjn1_internal_ops = {
+	.init_state = s5kjn1_init_state,
+};
 
 /* -----------------------------------------------------------------------------
  * Power management
@@ -1230,6 +1232,7 @@ static int s5kjn1_probe(struct i2c_client *client)
 		return -ENOMEM;
 
 	v4l2_i2c_subdev_init(&s5kjn1->sd, client, &s5kjn1_subdev_ops);
+	s5kjn1->sd.internal_ops = &s5kjn1_internal_ops;
 
 	/* Check the hardware configuration in device tree */
 	if (s5kjn1_check_hwcfg(dev, s5kjn1))
