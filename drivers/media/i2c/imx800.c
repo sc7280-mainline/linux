@@ -1011,7 +1011,7 @@ static int imx800_set_ctrl(struct v4l2_ctrl *ctrl)
 	int ret = 0;
 
 	state = v4l2_subdev_get_locked_active_state(&imx800->sd);
-	format = v4l2_subdev_get_pad_format(&imx800->sd, state, 0);
+	format = v4l2_subdev_state_get_format(state, 0);
 	dev_info(&client->dev, "imx800_set_ctrl %x\n", ctrl->id);
 
 	if (ctrl->id == V4L2_CID_VBLANK) {
@@ -1379,7 +1379,7 @@ static int imx800_set_pad_format(struct v4l2_subdev *sd,
 
 	imx800_update_pad_format(imx800, mode, &fmt->format, fmt->format.code);
 
-	format = v4l2_subdev_get_pad_format(sd, state, 0);
+	format = v4l2_subdev_state_get_format(state, 0);
 	*format = fmt->format;
 
 	/*
@@ -1389,7 +1389,7 @@ static int imx800_set_pad_format(struct v4l2_subdev *sd,
 	bin_h = min(IMX800_PIXEL_ARRAY_WIDTH / format->width, 2U);
 	bin_v = min(IMX800_PIXEL_ARRAY_HEIGHT / format->height, 2U);
 
-	crop = v4l2_subdev_get_pad_crop(sd, state, 0);
+	crop = v4l2_subdev_state_get_crop(state, 0);
 	crop->width = format->width * bin_h;
 	crop->height = format->height * bin_v;
 	crop->left = (IMX800_NATIVE_WIDTH - crop->width) / 2;
@@ -1436,7 +1436,7 @@ static int imx800_get_selection(struct v4l2_subdev *sd,
 	dev_info(sd->dev, "imx800_get_selection\n");
 	switch (sel->target) {
 	case V4L2_SEL_TGT_CROP: {
-		sel->r = *v4l2_subdev_get_pad_crop(sd, state, 0);
+		sel->r = *v4l2_subdev_state_get_crop(state, 0);
 		return 0;
 	}
 
@@ -1461,7 +1461,7 @@ static int imx800_get_selection(struct v4l2_subdev *sd,
 	return -EINVAL;
 }
 
-static int imx800_init_cfg(struct v4l2_subdev *sd,
+static int imx800_init_state(struct v4l2_subdev *sd,
 			   struct v4l2_subdev_state *state)
 {
 	struct v4l2_subdev_format fmt = {
@@ -1489,7 +1489,6 @@ static const struct v4l2_subdev_video_ops imx800_video_ops = {
 };
 
 static const struct v4l2_subdev_pad_ops imx800_pad_ops = {
-	.init_cfg = imx800_init_cfg,
 	.enum_mbus_code = imx800_enum_mbus_code,
 	.get_fmt = v4l2_subdev_get_fmt,
 	.set_fmt = imx800_set_pad_format,
@@ -1503,6 +1502,9 @@ static const struct v4l2_subdev_ops imx800_subdev_ops = {
 	.pad = &imx800_pad_ops,
 };
 
+static const struct v4l2_subdev_internal_ops imx800_internal_ops = {
+	.init_state = imx800_init_state,
+};
 
 /* -----------------------------------------------------------------------------
  * Power management
@@ -1654,6 +1656,7 @@ static int imx800_probe(struct i2c_client *client)
 		return -ENOMEM;
 
 	v4l2_i2c_subdev_init(&imx800->sd, client, &imx800_subdev_ops);
+	imx800->sd.internal_ops = &imx800_internal_ops;
 
 	/* Check the hardware configuration in device tree */
 	if (imx800_check_hwcfg(dev, imx800))
