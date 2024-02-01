@@ -189,16 +189,17 @@
 		regulator-always-on; // FIXME
 	};
 
-/*
 	fake-reg-mclk0 {
 		compatible = "regulator-fixed-clock";
 		regulator-name = "fake-reg-mclk0";
 		pinctrl-names = "default";
 		pinctrl-0 = <&cam_mclk0_default>;
 		clocks = <&camcc CAM_CC_MCLK0_CLK>;
+		assigned-clocks = <&camcc CAM_CC_MCLK0_CLK>;
+		assigned-clock-rates = <24000000>;
 		regulator-always-on;
 	};
-*/
+
 	fake-reg-mclk1 {
 		compatible = "regulator-fixed-clock";
 		regulator-name = "fake-reg-mclk1";
@@ -207,7 +208,7 @@
 		clocks = <&camcc CAM_CC_MCLK1_CLK>;
 		regulator-always-on;
 	};
-/*
+
 	fake-reg-mclk3 {
 		compatible = "regulator-fixed-clock";
 		regulator-name = "fake-reg-mclk3";
@@ -216,7 +217,7 @@
 		clocks = <&camcc CAM_CC_MCLK3_CLK>;
 		regulator-always-on;
 	};
-*/
+
 	usb_redrive_1v8: regulator-usb-redrive-1v8 {
 		compatible = "regulator-fixed";
 		regulator-name = "USB_REDRIVE_1V8";
@@ -637,13 +638,13 @@
 				remote-endpoint = <&camera_imx800_ep>;
 			};
 		};
-		port@3 {
-			csiphy3_ep: endpoint {
-				clock-lanes = <7>;
-				data-lanes = <0 1 2 3>;
-				remote-endpoint = <&camera_s5kjn1_ep>;
-			};
-		};
+		//port@3 {
+		//	csiphy3_ep: endpoint {
+		//		clock-lanes = <7>;
+		//		data-lanes = <0 1 2 3>;
+		//		remote-endpoint = <&camera_s5kjn1_ep>;
+		//	};
+		//};
 	};
 };
 
@@ -664,12 +665,12 @@
 */
 
 		clocks = <&camcc CAM_CC_MCLK0_CLK>;
-		assigned-clocks = <&camcc CAM_CC_MCLK0_CLK>;
-		assigned-clock-rates = <24000000>;
+		//assigned-clocks = <&camcc CAM_CC_MCLK0_CLK>;
+		//assigned-clock-rates = <24000000>;
 
 		reset-gpios = <&tlmm 20 GPIO_ACTIVE_LOW>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&cam_mclk0_default>;
+		//pinctrl-names = "default";
+		//pinctrl-0 = <&cam_mclk0_default>;
 
 		orientation = <1>;
 
@@ -695,8 +696,10 @@
 &cci1_i2c1 {
 	/* S5KJN1SQ03 @ 10 */
 
+#if 0
 	s5kjn1@10 {
-		compatible = "samsung,s5kjn1";
+		status = "disabled";
+		//compatible = "samsung,s5kjn1";
 		reg = <0x10>;
 
 /*
@@ -724,6 +727,7 @@
 			};
 		};
 	};
+#endif
 };
 
 &gcc {

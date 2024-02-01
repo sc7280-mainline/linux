@@ -96,10 +96,10 @@
 
 //TODO
 /* Pixel rate is fixed for all the modes */
-#define IMX800_PIXEL_RATE		1176690000
+#define IMX800_PIXEL_RATE		1400000000
 
 //TODO
-#define IMX800_DEFAULT_LINK_FREQ	600000000
+#define IMX800_DEFAULT_LINK_FREQ	1400000000
 
 /* IMX800 native and active pixel array size. */
 #define IMX800_NATIVE_WIDTH		4096U
@@ -525,15 +525,15 @@ static const char * const imx800_supply_name[] = {
  * - h&v flips
  */
 static const u32 imx800_mbus_formats[] = {
-	MEDIA_BUS_FMT_SRGGB10_1X10,
-	MEDIA_BUS_FMT_SGRBG10_1X10,
-	MEDIA_BUS_FMT_SGBRG10_1X10,
+	//MEDIA_BUS_FMT_SRGGB10_1X10,
+	//MEDIA_BUS_FMT_SGRBG10_1X10,
+	//MEDIA_BUS_FMT_SGBRG10_1X10,
 	MEDIA_BUS_FMT_SBGGR10_1X10,
 
-	MEDIA_BUS_FMT_SRGGB8_1X8,
-	MEDIA_BUS_FMT_SGRBG8_1X8,
-	MEDIA_BUS_FMT_SGBRG8_1X8,
-	MEDIA_BUS_FMT_SBGGR8_1X8,
+	//MEDIA_BUS_FMT_SRGGB8_1X8,
+	//MEDIA_BUS_FMT_SGRBG8_1X8,
+	//MEDIA_BUS_FMT_SGBRG8_1X8,
+	//MEDIA_BUS_FMT_SBGGR8_1X8,
 };
 
 /*
@@ -1095,7 +1095,7 @@ static int imx800_init_state(struct v4l2_subdev *sd,
 		.which = V4L2_SUBDEV_FORMAT_TRY,
 		.pad = 0,
 		.format = {
-			.code = MEDIA_BUS_FMT_SRGGB10_1X10,
+			.code = MEDIA_BUS_FMT_SBGGR10_1X10,
 			.width = supported_modes[0].width,
 			.height = supported_modes[0].height,
 		},
@@ -1159,6 +1159,7 @@ static int imx800_power_on(struct device *dev)
 		goto reg_off;
 	}
 
+	dev_info(dev, "reset_gpio=0\n");
 	gpiod_set_value_cansleep(imx800->reset_gpio, 0);
 	usleep_range(IMX800_XCLR_MIN_DELAY_US,
 		     IMX800_XCLR_MIN_DELAY_US + IMX800_XCLR_DELAY_RANGE_US);
@@ -1177,6 +1178,7 @@ static int imx800_power_off(struct device *dev)
 	struct imx800 *imx800 = to_imx800(sd);
 	dev_info(dev, "imx800_power_off\n");
 
+	dev_info(dev, "reset_gpio=1\n");
 	gpiod_set_value_cansleep(imx800->reset_gpio, 1);
 	regulator_bulk_disable(IMX800_NUM_SUPPLIES, imx800->supplies);
 	clk_disable_unprepare(imx800->xclk);
