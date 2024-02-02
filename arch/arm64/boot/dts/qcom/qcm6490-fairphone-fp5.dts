@@ -12,6 +12,7 @@
 #include <dt-bindings/iio/qcom,spmi-adc7-pm7325.h>
 #include <dt-bindings/iio/qcom,spmi-adc7-pmk8350.h>
 #include <dt-bindings/leds/common.h>
+#include <dt-bindings/media/video-interfaces.h>
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
 #include <dt-bindings/sound/qcom,q6afe.h>
@@ -631,20 +632,34 @@
 	status = "okay";
 
 	ports {
+#if 0
 		port@0 {
 			csiphy0_ep: endpoint {
 				clock-lanes = <7>;
 				data-lanes = <0 1 2 3>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_CPHY>;
 				remote-endpoint = <&camera_imx800_ep>;
 			};
 		};
-		//port@3 {
-		//	csiphy3_ep: endpoint {
-		//		clock-lanes = <7>;
-		//		data-lanes = <0 1 2 3>;
-		//		remote-endpoint = <&camera_s5kjn1_ep>;
-		//	};
-		//};
+#endif
+#if 0
+		port@1 {
+			csiphy1_ep: endpoint {
+				clock-lanes = <7>;
+				data-lanes = <0 1 2 3>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
+				remote-endpoint = <&camera_imx858_ep>;
+			};
+		};
+#endif
+		port@3 {
+			csiphy3_ep: endpoint {
+				clock-lanes = <7>;
+				data-lanes = <0 1 2 3>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
+				remote-endpoint = <&camera_s5kjn1_ep>;
+			};
+		};
 	};
 };
 
@@ -652,6 +667,7 @@
 	status = "okay";
 };
 
+#if 0
 &cci0_i2c0 {
 	imx800@1a {
 		compatible = "sony,imx800";
@@ -678,28 +694,30 @@
 			camera_imx800_ep: endpoint {
 				clock-lanes = <1>;
 				data-lanes = <0 2 3 4>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_CPHY>;
 				link-frequencies = /bits/ 64 <600000000>;
 				remote-endpoint = <&csiphy0_ep>;
 			};
 		};
 	};
 };
+#endif
 
 &cci0_i2c1 {
 	/* IMX858 @ 29 */
+	// bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
 };
 
 &cci1 {
 	status = "okay";
 };
 
+#if 1
 &cci1_i2c1 {
 	/* S5KJN1SQ03 @ 10 */
 
-#if 0
 	s5kjn1@10 {
-		status = "disabled";
-		//compatible = "samsung,s5kjn1";
+		compatible = "samsung,s5kjn1";
 		reg = <0x10>;
 
 /*
@@ -713,8 +731,8 @@
 		assigned-clock-rates = <24000000>;
 
 		reset-gpios = <&tlmm 78 GPIO_ACTIVE_LOW>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&cam_mclk3_default>;
+		//pinctrl-names = "default";
+		//pinctrl-0 = <&cam_mclk3_default>;
 
 		orientation = <0>;
 
@@ -723,12 +741,13 @@
 				clock-lanes = <1>;
 				data-lanes = <0 2 3 4>;
 				link-frequencies = /bits/ 64 <828000000>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
 				remote-endpoint = <&csiphy3_ep>;
 			};
 		};
 	};
-#endif
 };
+#endif
 
 &gcc {
 	protected-clocks = <GCC_CFG_NOC_LPASS_CLK>,

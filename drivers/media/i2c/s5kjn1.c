@@ -90,7 +90,7 @@
 #define S5KJN1_PIXEL_RATE		1176690000
 
 
-#define S5KJN1_DEFAULT_LINK_FREQ	828000000
+#define S5KJN1_DEFAULT_LINK_FREQ	828000000 // TODO?
 
 /* S5KJN1 native and active pixel array size. */
 #define S5KJN1_NATIVE_WIDTH		4080U
@@ -473,15 +473,15 @@ static const char * const s5kjn1_supply_name[] = {
  * - h&v flips
  */
 static const u32 s5kjn1_mbus_formats[] = {
-	MEDIA_BUS_FMT_SRGGB10_1X10,
-	MEDIA_BUS_FMT_SGRBG10_1X10,
+	//MEDIA_BUS_FMT_SRGGB10_1X10,
+	//MEDIA_BUS_FMT_SGRBG10_1X10,
 	MEDIA_BUS_FMT_SGBRG10_1X10,
-	MEDIA_BUS_FMT_SBGGR10_1X10,
+	//MEDIA_BUS_FMT_SBGGR10_1X10,
 
-	MEDIA_BUS_FMT_SRGGB8_1X8,
-	MEDIA_BUS_FMT_SGRBG8_1X8,
-	MEDIA_BUS_FMT_SGBRG8_1X8,
-	MEDIA_BUS_FMT_SBGGR8_1X8,
+	//MEDIA_BUS_FMT_SRGGB8_1X8,
+	//MEDIA_BUS_FMT_SGRBG8_1X8,
+	//MEDIA_BUS_FMT_SGBRG8_1X8,
+	//MEDIA_BUS_FMT_SBGGR8_1X8,
 };
 
 /*
@@ -1038,7 +1038,7 @@ static int s5kjn1_init_state(struct v4l2_subdev *sd,
 		.which = V4L2_SUBDEV_FORMAT_TRY,
 		.pad = 0,
 		.format = {
-			.code = MEDIA_BUS_FMT_SRGGB10_1X10,
+			.code = MEDIA_BUS_FMT_SGBRG10_1X10,
 			.width = supported_modes[0].width,
 			.height = supported_modes[0].height,
 		},
