@@ -583,6 +583,8 @@ static void csiphy_lanes_enable(struct csiphy_device *csiphy,
 
 	settle_cnt = csiphy_settle_cnt_calc(link_freq, csiphy->timer_clk_rate);
 
+	printk(KERN_ERR "%s:%d DBG id=%d settle_cnt=%d\n", __func__, __LINE__, csiphy->id, settle_cnt);
+
 	val = CSIPHY_3PH_CMN_CSI_COMMON_CTRL5_CLK_ENABLE;
 	for (i = 0; i < c->num_data; i++)
 		val |= BIT(c->data[i].pos * 2);
