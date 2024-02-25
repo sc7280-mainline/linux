@@ -1,0 +1,133 @@
+#include <dt-bindings/iio/qcom,spmi-adc7-pmk8350.h>
+#include "sc7280.dtsi"
+#include "pm7325.dtsi"
+#include "pm8350c.dtsi"
+#include "pmk8350.dtsi"
+
+/ {
+	model = "Samsung Galaxy Book2 Go";
+	compatible = "samsung,book2go", "qcom,sc7280";
+    chassis-type = "laptop";
+};
+
+&i2c2 {
+	clock-frequency = <400000>;
+	status = "okay";
+
+	touchpad@05	{
+		compatible = "hid-over-i2c";
+		reg = <0x05>;
+
+	};
+};
+
+&i2c14 {
+	clock-frequency = <100000>;
+	status = "okay";
+
+	keyboard@05	{
+		compatible = "hid-over-i2c";
+		reg = <0x05>;
+
+	};
+};
+
+&apps_rsc {
+	regulators-0 {
+		compatible = "qcom,pm7325-rpmh-regulators";
+		qcom,pmic-id = "b";
+
+		vreg_l1b_0p8: ldo1 {
+			regulator-min-microvolt = <880000>;
+			regulator-max-microvolt = <912000>;
+		};
+
+		vreg_l2b_3p0: ldo2 {
+			regulator-min-microvolt = <3072000>;
+			regulator-max-microvolt = <3072000>;
+		};
+
+		vreg_l6b_1p2: ldo6 {
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1200000>;
+		};
+
+		vreg_l7b_2p9: ldo7 {
+			regulator-min-microvolt = <2504000>;
+			regulator-max-microvolt = <2960000>;
+		};
+
+		vreg_l9b_1p2: ldo9 {
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1200000>;
+		};
+
+		vreg_l18b_1p8: ldo18 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+
+		vreg_l19b_1p8: ldo19 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+
+        vreg_s1b_1p8: smps1 {
+			regulator-min-microvolt = <1872000>;
+			regulator-max-microvolt = <1872000>;
+		};
+
+		vreg_s7b_0p9: smps7 {
+			regulator-min-microvolt = <952000>;
+			regulator-max-microvolt = <952000>;
+		};
+
+		vreg_s8b_1p2: smps8 {
+			regulator-min-microvolt = <1256000>;
+			regulator-max-microvolt = <1256000>;
+		};
+	};
+
+	regulators-1 {
+		compatible = "qcom,pm8350c-rpmh-regulators";
+		qcom,pmic-id = "c";
+
+		vreg_l1c_1p8: ldo1 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+
+		vreg_l6c_2p9: ldo6 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <2950000>;
+		};
+
+		vreg_l7c_3p0: ldo7 {
+			regulator-min-microvolt = <3000000>;
+			regulator-max-microvolt = <3300000>;
+		};
+
+		vreg_l9c_2p9: ldo9 {
+			regulator-min-microvolt = <2960000>;
+			regulator-max-microvolt = <2960000>;
+		};
+
+		vreg_l10c_0p8: ldo10 {
+			regulator-min-microvolt = <880000>;
+			regulator-max-microvolt = <880000>;
+		};
+
+		vreg_l12c_1p8: ldo12 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+	};
+};
+
+&dispcc {
+	status = "disabled";
+};
+
+&gpu {
+	status = "disabled";
+};
