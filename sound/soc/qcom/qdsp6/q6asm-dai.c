@@ -129,19 +129,13 @@ static const struct snd_pcm_hardware q6asm_dai_hardware_playback = {
 #define Q6ASM_FEDAI_DRIVER(num) { \
 		.playback = {						\
 			.stream_name = "MultiMedia"#num" Playback",	\
-			.rates = (SNDRV_PCM_RATE_8000_48000 |		\
-				  SNDRV_PCM_RATE_12000 |		\
-				  SNDRV_PCM_RATE_24000 |		\
-				  SNDRV_PCM_RATE_88200 |		\
-				  SNDRV_PCM_RATE_96000 |		\
-				  SNDRV_PCM_RATE_176400 |		\
-				  SNDRV_PCM_RATE_192000),		\
-			.formats = (SNDRV_PCM_FMTBIT_S16_LE |		\
-					SNDRV_PCM_FMTBIT_S24_LE),	\
-			.channels_min = 1,				\
-			.channels_max = 8,				\
-			.rate_min =     8000,				\
-			.rate_max =	192000,				\
+			.rates = (SNDRV_PCM_RATE_48000|		\
+					SNDRV_PCM_RATE_KNOT),		\
+			.formats = (SNDRV_PCM_FMTBIT_S24_LE),	\
+			.channels_min = 2,				\
+			.channels_max = 2,				\
+			.rate_min =     48000,				\
+			.rate_max =	48000,				\
 		},							\
 		.capture = {						\
 			.stream_name = "MultiMedia"#num" Capture",	\
