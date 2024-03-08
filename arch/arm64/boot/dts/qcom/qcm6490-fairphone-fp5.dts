@@ -1292,6 +1292,10 @@
 	compatible = "fairphone,fp5-sndcard";
 	model = "Fairphone 5";
 
+	pinctrl-0 = <&i2s1_active>;
+	pinctrl-1 = <&i2s1_sleep>;
+	pinctrl-names = "default", "sleep";
+
 	mm1-dai-link {
 		link-name = "MultiMedia1";
 
