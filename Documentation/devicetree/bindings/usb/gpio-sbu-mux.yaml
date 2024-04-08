@@ -34,8 +34,13 @@ properties:
   vcc-supply:
     description: power supply
 
-  mode-switch: true
-  orientation-switch: true
+  mode-switch:
+    description: Flag the port as possible handle of altmode switching
+    type: boolean
+
+  orientation-switch:
+    description: Flag the port as possible handler of orientation switching
+    type: boolean
 
   port:
     $ref: /schemas/graph.yaml#/properties/port
@@ -48,15 +53,6 @@ required:
   - select-gpios
   - orientation-switch
   - port
-
-allOf:
-  - $ref: usb-switch.yaml#
-  - if:
-      required:
-        - mode-switch
-    then:
-      required:
-        - enable-gpios
 
 additionalProperties: false
 
