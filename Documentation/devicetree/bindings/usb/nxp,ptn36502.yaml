@@ -20,8 +20,13 @@ properties:
   vdd18-supply:
     description: Power supply for VDD18 pin
 
-  orientation-switch: true
-  retimer-switch: true
+  retimer-switch:
+    description: Flag the port as possible handle of SuperSpeed signals retiming
+    type: boolean
+
+  orientation-switch:
+    description: Flag the port as possible handler of orientation switching
+    type: boolean
 
   ports:
     $ref: /schemas/graph.yaml#/properties/ports
@@ -43,9 +48,6 @@ properties:
 required:
   - compatible
   - reg
-
-allOf:
-  - $ref: usb-switch.yaml#
 
 additionalProperties: false
 
