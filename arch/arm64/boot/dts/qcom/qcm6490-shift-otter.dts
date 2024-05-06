@@ -549,7 +549,27 @@
 &i2c13 {
 	status = "okay";
 
-	/* focaltech FT3658U @ 38 */
+	touchscreen@38 {
+		compatible = "focaltech,fts";
+		reg = <0x38>;
+
+		/* FIXME!!!! */
+		interrupt-parent = <&tlmm>;
+		interrupts = <81 0x2008>;
+
+		vdd-supply = <&vreg_l3c>;
+		vcc_i2c-supply = <&vreg_l12c>;
+
+		focaltech,reset-gpio = <&tlmm 105 GPIO_ACTIVE_HIGH>;
+		focaltech,irq-gpio = <&tlmm 81 0x2008>;
+		focaltech,max-touch-number = <10>;
+		focaltech,display-coords = <0 0 1080 2400>;
+
+		pinctrl-names = "pmx_ts_active", "pmx_ts_suspend", "pmx_ts_release";
+		pinctrl-0 = <&pmx_ts_active>;
+		pinctrl-1 = <&pmx_ts_int_suspend &pmx_ts_reset_suspend>;
+		pinctrl-2 = <&pmx_ts_release>;
+	};
 };
 
 &ipa {
@@ -950,6 +970,34 @@
 	sw_ctrl_default: sw-ctrl-default-state {
 		pins = "gpio86";
 		function = "gpio";
+		bias-pull-down;
+	};
+
+	pmx_ts_active: pmx-ts-active-state {
+		pins = "gpio105", "gpio81";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	pmx_ts_int_suspend: pmx-ts-int-suspend-state {
+		pins = "gpio81";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	pmx_ts_release: pmx-ts-release-state {
+		pins = "gpio105", "gpio81";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	pmx_ts_reset_suspend: pmx-ts-reset-suspend-state {
+		pins = "gpio105";
+		function = "gpio";
+		drive-strength = <2>;
 		bias-pull-down;
 	};
 };
