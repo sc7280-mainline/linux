@@ -87,6 +87,12 @@ static int drm_check_count = 0;
 #endif
 #endif
 
+#if FTS_POWER_SOURCE_CUST_EN
+#if pinctrl_select_state
+#include <linux/pinctrl/consumer.h>
+#endif
+#endif
+
 
 /*****************************************************************************
 * Static function prototypes
