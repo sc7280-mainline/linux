@@ -1078,9 +1078,13 @@ static int shift_sh8804b_panel_bl_update_status(struct backlight_device *bl)
 	int err;
 	u16 brightness = (u16)backlight_get_brightness(bl);
 
+	dsi->mode_flags |= MIPI_DSI_MODE_LPM;
+
 	err = mipi_dsi_dcs_set_display_brightness_large(dsi, brightness);
 	if (err < 0)
 		return err;
+
+	dsi->mode_flags &= ~MIPI_DSI_MODE_LPM;
 
 	return 0;
 }
