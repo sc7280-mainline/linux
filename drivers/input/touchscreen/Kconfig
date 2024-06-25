@@ -1431,5 +1431,6 @@ config TOUCHSCREEN_HIMAX_HX83112B
 	  module will be called himax_hx83112b.
 
 source "drivers/input/touchscreen/goodix_berlin_a_driver/Kconfig"
+source "drivers/input/touchscreen/focaltech_touch_ft3658u/Kconfig"
 
 endif

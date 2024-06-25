@@ -1,0 +1,9 @@
+#
+# Focaltech Touchscreen driver configuration
+#
+
+config TOUCHSCREEN_FOCALTECH_FT3658U
+	tristate "Focaltech Touchscreen"
+	help
+	  Say Y here if you have Focaltech touch panel.
+	  If unsure, say N.
