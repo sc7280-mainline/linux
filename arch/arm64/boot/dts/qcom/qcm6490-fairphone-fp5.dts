@@ -142,7 +142,6 @@
 		gpio = <&tlmm 157 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		vin-supply = <&vreg_bob>;
-		regulator-always-on; // FIXME
 	};
 
 	ois_dvdd_1p1: regulator-ois-dvdd-1p1 {
@@ -153,7 +152,6 @@
 		gpio = <&tlmm 97 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		vin-supply = <&vreg_s8b>;
-		regulator-always-on; // FIXME
 	};
 
 	afvdd_2p8: regulator-afvdd-2p8 {
@@ -164,34 +162,6 @@
 		gpio = <&tlmm 68 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		vin-supply = <&vreg_bob>;
-		regulator-always-on; // FIXME
-	};
-
-	fake-reg-mclk0 {
-		compatible = "regulator-fixed-clock";
-		regulator-name = "fake-reg-mclk0";
-		pinctrl-names = "default";
-		pinctrl-0 = <&cam_mclk0_default>;
-		clocks = <&camcc CAM_CC_MCLK0_CLK>;
-		regulator-always-on;
-	};
-
-	fake-reg-mclk1 {
-		compatible = "regulator-fixed-clock";
-		regulator-name = "fake-reg-mclk1";
-		pinctrl-names = "default";
-		pinctrl-0 = <&cam_mclk1_default>;
-		clocks = <&camcc CAM_CC_MCLK1_CLK>;
-		regulator-always-on;
-	};
-
-	fake-reg-mclk3 {
-		compatible = "regulator-fixed-clock";
-		regulator-name = "fake-reg-mclk3";
-		pinctrl-names = "default";
-		pinctrl-0 = <&cam_mclk3_default>;
-		clocks = <&camcc CAM_CC_MCLK3_CLK>;
-		regulator-always-on;
 	};
 
 	thermal-zones {
@@ -656,49 +626,42 @@
 				regulator-name = "vreg_l1p";
 				regulator-min-microvolt = <1000000>;
 				regulator-max-microvolt = <1200000>;
-				regulator-always-on; // FIXME
 			};
 
 			vreg_l2p: ldo2 {
 				regulator-name = "vreg_l2p";
 				regulator-min-microvolt = <950000>;
 				regulator-max-microvolt = <1152000>;
-				regulator-always-on; // FIXME
 			};
 
 			vreg_l3p: ldo3 {
 				regulator-name = "vreg_l3p";
 				regulator-min-microvolt = <2700000>;
 				regulator-max-microvolt = <3000000>;
-				regulator-always-on; // FIXME
 			};
 
 			vreg_l4p: ldo4 {
 				regulator-name = "vreg_l4p";
 				regulator-min-microvolt = <2700000>;
 				regulator-max-microvolt = <2900000>;
-				regulator-always-on; // FIXME
 			};
 
 			vreg_l5p: ldo5 {
 				regulator-name = "vreg_l5p";
 				regulator-min-microvolt = <2704000>;
 				regulator-max-microvolt = <2900000>;
-				regulator-always-on; // FIXME
 			};
 
 			vreg_l6p: ldo6 {
 				regulator-name = "vreg_l6p";
 				regulator-min-microvolt = <1700000>;
 				regulator-max-microvolt = <1904000>;
-				regulator-always-on; // FIXME
 			};
 
 			vreg_l7p: ldo7 {
 				regulator-name = "vreg_l7p";
 				regulator-min-microvolt = <2700000>;
 				regulator-max-microvolt = <3000000>;
-				regulator-always-on; // FIXME
 			};
 		};
 	};
@@ -988,27 +951,6 @@
 		pins = "gpio85";
 		function = "gpio";
 		output-low;
-		bias-disable;
-	};
-
-	cam_mclk0_default: cam-mclk0-default-state {
-		pins = "gpio64";
-		function = "cam_mclk";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	cam_mclk1_default: cam-mclk1-default-state {
-		pins = "gpio65";
-		function = "cam_mclk";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	cam_mclk3_default: cam-mclk3-default-state {
-		pins = "gpio67";
-		function = "cam_mclk";
-		drive-strength = <2>;
 		bias-disable;
 	};
 
