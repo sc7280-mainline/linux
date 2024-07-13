@@ -179,6 +179,7 @@ static bool tfa987x_setup_dcdc(struct device *dev, struct regmap *rmap, u16 rev)
 					TFA9872_DCDC_CTRL0_DCVOS_MSK,
 					FIELD_PREP(TFA9872_DCDC_CTRL0_DCVOS_MSK, dcvos));
 		break;
+	case 0x73:
 	case 0x74:
 		if (!FIELD_FIT(TFA9874_DCDC_CTRL6_DCVOF_MSK, dcvof) ||
 		    !FIELD_FIT(TFA9874_DCDC_CTRL6_DCVOS_MSK, dcvos))
@@ -233,6 +234,7 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 	}
 
 	switch (rev) {
+		case 0x0b73:
 		case 0x1b72:
 		case 0x2b72:
 		case 0x3b72:
