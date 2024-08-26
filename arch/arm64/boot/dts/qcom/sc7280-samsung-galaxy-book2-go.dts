@@ -8,27 +8,56 @@
 	model = "Samsung Galaxy Book2 Go";
 	compatible = "samsung,book2go", "qcom,sc7280";
     chassis-type = "laptop";
-};
 
-&i2c2 {
-	clock-frequency = <400000>;
-	status = "okay";
+	gpio-keys {
+		compatible = "gpio-keys";
 
-	touchpad@05	{
-		compatible = "hid-over-i2c";
-		reg = <0x05>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&hall_int_default>;
 
+		switch-lid {
+			gpios = <&tlmm 35 GPIO_ACTIVE_LOW>; //gpio35 in sc7280.dtsi corresponds with qup_spi8_cs_gpio?
+			linux,input-type = <EV_SW>;
+			linux,code = <SW_LID>;
+			wakeup-source;
+			wakeup-event-action = <EV_ACT_DEASSERTED>;
+		};
 	};
 };
 
-&i2c14 {
+&i2c0 {
+	clock-frequency = <400000>;
+	status = "okay";
+
+	touchpad@40	{
+		compatible = "hid-over-i2c";
+		reg = <0x40>;
+		hid-descr-addr = <0x1>;
+
+		interrupts-extended = <&tlmm 61 IRQ_TYPE_LEVEL_LOW>;
+
+		pinctrl-0 = <&hid_touchpad_default>;
+		pinctrl-names = "default";
+
+		wakeup-source;
+	};
+};
+
+&i2c12 {
 	clock-frequency = <100000>;
 	status = "okay";
 
-	keyboard@05	{
+	keyboard@5	{
 		compatible = "hid-over-i2c";
-		reg = <0x05>;
+		reg = <0x5>;
+		hid-descr-addr = <0x1>;
 
+		interrupts-extended = <&tlmm 131 IRQ_TYPE_LEVEL_LOW>;
+
+		pinctrl-0 = <&hid_keyboard_default>;
+		pinctrl-names = "default";
+
+		wakeup-source;
 	};
 };
 
@@ -130,4 +159,52 @@
 
 &gpu {
 	status = "disabled";
+};
+
+&tlmm {
+	hall_int_default: hall-int-state {
+		pins = "gpio35";
+		function = "gpio";
+		bias-disable;
+	};
+
+	hid_keyboard_default: hid-keyboard-default-state {
+		pins = "gpio131";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+
+	hid_touchpad_default: hid-touchpad-default-state {
+		pins = "gpio61";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+}
+
+&ufs_mem_hc {
+	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
+	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
+
+	// Yoinked from fp5, dsdt lists pmicvregvotes for both of these, no amperages in dsdt though
+	vcc-supply = <&vreg_l7b_2p9>;
+	vcc-max-microamp = <800000>;
+	/*
+	 * Technically l9b enables an eLDO (supplied by s1b) which then powers
+	 * VCCQ2 of the UFS.
+	 */
+	vccq-supply = <&vreg_l9b_1p2>;
+	vccq-max-microamp = <900000>;
+
+	status = "okay";
+};
+
+&ufs_mem_phy {
+	/*
+	 * FP5 dts has stuff here about regulators/supplies, no idea which ones I should use on this board
+	 * Also no device in dsdt on 1D87000
+	 */
+
+	status = "okay";
 };
