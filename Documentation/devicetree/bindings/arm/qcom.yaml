@@ -379,6 +379,7 @@ properties:
               - fairphone,fp5
               - qcom,qcm6490-idp
               - qcom,qcs6490-rb3gen2
+              - qcom,qcs6490-rb3gen2-vision-mezzanine
               - shift,otter
           - const: qcom,qcm6490
 
