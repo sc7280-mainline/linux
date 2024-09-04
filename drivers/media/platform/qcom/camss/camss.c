@@ -2155,6 +2155,57 @@ static int camss_init_subdevices(struct camss *camss)
 }
 
 /*
+ * camss_link_entities_v2 - Register subdev nodes and create links
+ * @camss: CAMSS device
+ *
+ * Return 0 on success or a negative error code on failure
+ */
+static int camss_link_entities_v2(struct camss *camss)
+{
+	int i, j;
+	int ret;
+
+	for (i = 0; i < camss->res->csiphy_num; i++) {
+		for (j = 0; j < camss->res->csid_num; j++) {
+			ret = media_create_pad_link(&camss->csiphy[i].subdev.entity,
+						    MSM_CSIPHY_PAD_SRC,
+						    &camss->csid[j].subdev.entity,
+						    MSM_CSID_PAD_SINK,
+						    0);
+			if (ret < 0) {
+				dev_err(camss->dev,
+					"Failed to link %s->%s entities: %d\n",
+					camss->csiphy[i].subdev.entity.name,
+					camss->csid[j].subdev.entity.name,
+					ret);
+				return ret;
+			}
+		}
+	}
+
+	for (i = 0; i < camss->res->csid_num; i++)
+		for (j = 0; j < camss->vfe[i].res->line_num; j++) {
+			struct v4l2_subdev *csid = &camss->csid[i].subdev;
+			struct v4l2_subdev *vfe = &camss->vfe[i].line[j].subdev;
+
+			ret = media_create_pad_link(&csid->entity,
+						    MSM_CSID_PAD_FIRST_SRC + j,
+						    &vfe->entity,
+						    MSM_VFE_PAD_SINK,
+						    0);
+			if (ret < 0) {
+				dev_err(camss->dev,
+					"Failed to link %s->%s entities: %d\n",
+					csid->entity.name,
+					vfe->entity.name,
+					ret);
+				return ret;
+			}
+		}
+	return 0;
+}
+
+/*
  * camss_link_entities - Register subdev nodes and create links
  * @camss: CAMSS device
  *
@@ -2768,7 +2819,7 @@ static const struct camss_resources sc8280xp_resources = {
 	.csiphy_num = ARRAY_SIZE(csiphy_res_sc8280xp),
 	.csid_num = ARRAY_SIZE(csid_res_sc8280xp),
 	.vfe_num = ARRAY_SIZE(vfe_res_sc8280xp),
-	.link_entities = camss_link_entities
+	.link_entities = camss_link_entities_v2
 };
 
 static const struct camss_resources sc7280_resources = {
