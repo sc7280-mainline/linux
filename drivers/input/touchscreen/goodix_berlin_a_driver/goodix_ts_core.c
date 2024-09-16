@@ -41,12 +41,12 @@ static bool tp_if_exist=false;
 static bool tp_if_suspend=false;
 struct goodix_ts_core *global_core_data;
 const u32 CUSTOM_ADDR= 0x10180;
-const static unsigned char CUSTOM_USB_ONLINE_BUF[2][6]=
+static const unsigned char CUSTOM_USB_ONLINE_BUF[2][6]=
 {
 	{0x00, 0x00, 0x04, 0x10, 0x14, 0x00},
     {0x00, 0x00, 0x04, 0x11, 0x15, 0x00},
 };
-const static unsigned char CUSTOM_SCREEN_BUF[3][8]=
+static const unsigned char CUSTOM_SCREEN_BUF[3][8]=
 {
 	{0x00, 0x00, 0x06, 0x17, 0x30, 0x00, 0x4D, 0x00},
 	{0x00, 0x00, 0x06, 0x17, 0x70, 0x01, 0x8E, 0x00},
@@ -75,7 +75,7 @@ static int goodix_ts_switch_config(struct goodix_ts_core *cd, enum GOODIX_IC_CON
 			cd->config_type = type;
 	}
 
-	if (type == CFG_TYPE_CHARGE) {
+	if (type == (enum GOODIX_IC_CONFIG_TYPE)CFG_TYPE_CHARGE) {
 		ts_debug("ready for sending charge cmd ......");
 		ret = cd->hw_ops->write(cd,
 								CUSTOM_ADDR,
@@ -171,6 +171,7 @@ Nothing_happened:
 }
 
 static DEFINE_MUTEX(usb_online_mutex);
+#if 0
 void tp_get_usb_online(int online)
 {
 	mutex_lock(&usb_online_mutex);
@@ -190,6 +191,7 @@ non_exist:
 	mutex_unlock(&usb_online_mutex);	
 }
 EXPORT_SYMBOL_GPL(tp_get_usb_online);
+#endif
 
 static u8 screen_mode=0;
 /* screen mode show */
@@ -251,7 +253,7 @@ static ssize_t goodix_ts_screen_mode_store(struct device *dev,
 #include <drm/drm_panel.h>
 struct drm_panel *gdix_active_panel;
 
-int check_dt(struct device_node *np)
+static int check_dt(struct device_node *np)
 {
 	int i;
 	int count;
@@ -276,7 +278,7 @@ int check_dt(struct device_node *np)
 	return -ENODEV;
 }
 
-int check_default_tp(struct device_node *dt, const char *prop)
+static int check_default_tp(struct device_node *dt, const char *prop)
 {
 	const char *active_tp;
 	const char *compatible;
@@ -1199,7 +1201,7 @@ static BLOCKING_NOTIFIER_HEAD(ts_notifier_list);
  * @nb: notifier block to callback on events
  *  see enum ts_notify_event in goodix_ts_core.h
  */
-int goodix_ts_register_notifier(struct notifier_block *nb)
+static int goodix_ts_register_notifier(struct notifier_block *nb)
 {
 	return blocking_notifier_chain_register(&ts_notifier_list, nb);
 }
@@ -1209,7 +1211,7 @@ int goodix_ts_register_notifier(struct notifier_block *nb)
  * @nb: notifier block to callback on events
  *	see enum ts_notify_event in goodix_ts_core.h
  */
-int goodix_ts_unregister_notifier(struct notifier_block *nb)
+static int goodix_ts_unregister_notifier(struct notifier_block *nb)
 {
 	return blocking_notifier_chain_unregister(&ts_notifier_list, nb);
 }
@@ -1645,7 +1647,7 @@ static int goodix_ts_power_init(struct goodix_ts_core *core_data)
  * @core_data: pointer to touch core data
  * return: 0 ok, <0 failed
  */
-int goodix_ts_power_on(struct goodix_ts_core *cd)
+static int goodix_ts_power_on(struct goodix_ts_core *cd)
 {
 	int ret = 0;
 
@@ -1666,7 +1668,7 @@ int goodix_ts_power_on(struct goodix_ts_core *cd)
  * @core_data: pointer to touch core data
  * return: 0 ok, <0 failed
  */
-int goodix_ts_power_off(struct goodix_ts_core *cd)
+static int goodix_ts_power_off(struct goodix_ts_core *cd)
 {
 	int ret;
 
@@ -1859,7 +1861,7 @@ static int goodix_ts_pen_dev_config(struct goodix_ts_core *core_data)
 	return 0;
 }
 
-void goodix_ts_input_dev_remove(struct goodix_ts_core *core_data)
+static void goodix_ts_input_dev_remove(struct goodix_ts_core *core_data)
 {
 	if (!core_data->input_dev)
 		return;
@@ -1868,7 +1870,7 @@ void goodix_ts_input_dev_remove(struct goodix_ts_core *core_data)
 	core_data->input_dev = NULL;
 }
 
-void goodix_ts_pen_dev_remove(struct goodix_ts_core *core_data)
+static void goodix_ts_pen_dev_remove(struct goodix_ts_core *core_data)
 {
 	if (!core_data->pen_dev)
 		return;
@@ -1988,7 +1990,7 @@ static int goodix_esd_notifier_callback(struct notifier_block *nb,
 /**
  * goodix_ts_esd_init - initialize esd protection
  */
-int goodix_ts_esd_init(struct goodix_ts_core *cd)
+static int goodix_ts_esd_init(struct goodix_ts_core *cd)
 {
 	struct goodix_ic_info_misc *misc = &cd->ic_info.misc;
 	struct goodix_ts_esd *ts_esd = &cd->ts_esd;
@@ -2208,7 +2210,7 @@ out:
  * goodix_ts_fb_notifier_callback - Framebuffer notifier callback
  * Called by kernel during framebuffer blanck/unblank phrase
  */
-int goodix_ts_fb_notifier_callback(struct notifier_block *self,
+static int goodix_ts_fb_notifier_callback(struct notifier_block *self,
 	unsigned long event, void *data)
 {
 	struct goodix_ts_core *core_data =
@@ -2362,7 +2364,7 @@ static void goodix_self_check(struct work_struct *work)
 	}
 }
 
-int goodix_ts_stage2_init(struct goodix_ts_core *cd)
+static int goodix_ts_stage2_init(struct goodix_ts_core *cd)
 {
 	int ret;
 
@@ -2694,7 +2696,6 @@ static void goodix_ts_remove(struct platform_device *pdev)
 	struct goodix_ts_core *core_data = platform_get_drvdata(pdev);
 	struct goodix_ts_hw_ops *hw_ops = core_data->hw_ops;
 	struct goodix_ts_esd *ts_esd = &core_data->ts_esd;
-	int ret = 0;
 
 	goodix_ts_unregister_notifier(&core_data->ts_notifier);
 	goodix_tools_exit();

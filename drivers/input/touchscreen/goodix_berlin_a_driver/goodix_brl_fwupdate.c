@@ -938,7 +938,7 @@ static int goodix_update_finish(struct fw_update_ctrl *fwu_ctrl)
  * @fwu_ctrl: firmware control
  * return: = 0 update ok, < 0 error or NO_NEED_UPDATE
  */
-int goodix_fw_update_proc(struct fw_update_ctrl *fwu_ctrl)
+static int goodix_fw_update_proc(struct fw_update_ctrl *fwu_ctrl)
 {
 #define FW_UPDATE_RETRY		2
 	int retry0 = FW_UPDATE_RETRY;
