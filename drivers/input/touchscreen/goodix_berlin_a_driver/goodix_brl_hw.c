@@ -287,7 +287,7 @@ power_off:
 	return ret;
 }
 
-int brl_suspend(struct goodix_ts_core *cd)
+static int brl_suspend(struct goodix_ts_core *cd)
 {
 	u32 cmd_reg = cd->ic_info.misc.cmd_addr;
 	u8 sleep_cmd[] = {0x00, 0x00, 0x04, 0x84, 0x88, 0x00};
@@ -295,14 +295,14 @@ int brl_suspend(struct goodix_ts_core *cd)
 	return cd->hw_ops->write(cd, cmd_reg, sleep_cmd, sizeof(sleep_cmd));
 }
 
-int brl_resume(struct goodix_ts_core *cd)
+static int brl_resume(struct goodix_ts_core *cd)
 {
 	return cd->hw_ops->reset(cd, GOODIX_NORMAL_RESET_DELAY_MS);
 }
 
 #define GOODIX_GESTURE_CMD_BA	0x12
 #define GOODIX_GESTURE_CMD		0xA6
-int brl_gesture(struct goodix_ts_core *cd, int gesture_type)
+static int brl_gesture(struct goodix_ts_core *cd, int gesture_type)
 {
 	struct goodix_ts_cmd cmd;
 	u32 type = ~(cd->gesture_type);
@@ -1363,6 +1363,7 @@ static int goodix_touch_handler(struct goodix_ts_core *cd,
 			switch (point_type) {
 			case POINT_TYPE_STYLUS_HOVER:
 				pen_data->is_hover = true;
+				fallthrough;
 			case POINT_TYPE_STYLUS:
 				goodix_parse_pen(pen_data, buffer, data);
 				checksum_len += BYTES_STYLUS_LEN;

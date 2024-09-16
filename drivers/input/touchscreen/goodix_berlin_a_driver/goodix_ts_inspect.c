@@ -123,7 +123,7 @@
 
 
 #define ABS(val)			((val < 0)? -(val) : val)
-#define MAX(a, b)			((a > b)? a : b)
+//#define MAX(a, b)			((a > b)? a : b)
 
 static bool module_initialized;
 static struct seq_file *g_seq;
@@ -1989,7 +1989,7 @@ exit:
 	goodix_cap_test_finish(ts_test);
 }
 
-char *goodix_strncat(char *dest, char *src, size_t dest_size)
+static char *goodix_strncat(char *dest, char *src, size_t dest_size)
 {
 	size_t dest_len = 0;
 
@@ -1997,7 +1997,7 @@ char *goodix_strncat(char *dest, char *src, size_t dest_size)
 	return strncat(&dest[dest_len], src, dest_size - dest_len - 1);
 }
 
-char *goodix_strncatint(char *dest, int src, char *format, size_t dest_size)
+static char *goodix_strncatint(char *dest, int src, char *format, size_t dest_size)
 {
 	char src_str[MAX_STR_LEN] = {0};
 
