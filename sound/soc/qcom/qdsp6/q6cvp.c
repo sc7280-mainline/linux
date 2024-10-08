@@ -165,16 +165,16 @@ struct vss_icommon_cmd_set_param_v2_cmd {
 } __packed;
 
 struct q6voice_session *q6cvp_session_create(enum q6voice_path_type path,
-					     u16 tx_port, u16 rx_port)
+					     u16 tx_port, u16 rx_port,
+					     u32 tx_topo, u32 rx_topo)
 {
 	struct vss_ivocproc_cmd_create_full_control_session_v2_cmd cmd;
 
 	cmd.hdr.pkt_size = sizeof(cmd);
 	cmd.hdr.opcode = VSS_IVOCPROC_CMD_CREATE_FULL_CONTROL_SESSION_V2;
 
-	/* TODO: Implement calibration */
-	cmd.tx_topology_id = VSS_IVOCPROC_TOPOLOGY_ID_TX_SM_ECNS;
-	cmd.rx_topology_id = VSS_IVOCPROC_TOPOLOGY_ID_RX_DEFAULT;
+	cmd.tx_topology_id = tx_topo;
+	cmd.rx_topology_id = rx_topo;
 
 	cmd.direction = VSS_IVOCPROC_DIRECTION_RX_TX;
 	cmd.tx_port_id = tx_port;
@@ -188,7 +188,8 @@ struct q6voice_session *q6cvp_session_create(enum q6voice_path_type path,
 EXPORT_SYMBOL_GPL(q6cvp_session_create);
 
 struct q6voice_session *q6cvp_session_create_v3(enum q6voice_path_type path,
-						u16 tx_port, u16 rx_port)
+						u16 tx_port, u16 rx_port,
+						u32 tx_topo, u32 rx_topo)
 {
 	/*
 	 * According to downstream, the v3 parameters are the exact same, with
@@ -199,9 +200,8 @@ struct q6voice_session *q6cvp_session_create_v3(enum q6voice_path_type path,
 	cmd.hdr.pkt_size = sizeof(cmd);
 	cmd.hdr.opcode = VSS_IVOCPROC_CMD_CREATE_FULL_CONTROL_SESSION_V3;
 
-	/* TODO: Implement calibration */
-	cmd.tx_topology_id = VSS_IVOCPROC_TOPOLOGY_ID_TX_SM_ECNS;
-	cmd.rx_topology_id = VSS_IVOCPROC_TOPOLOGY_ID_RX_DEFAULT;
+	cmd.tx_topology_id = tx_topo;
+	cmd.rx_topology_id = rx_topo;
 
 	cmd.direction = VSS_IVOCPROC_DIRECTION_RX_TX;
 	cmd.tx_port_id = tx_port;
