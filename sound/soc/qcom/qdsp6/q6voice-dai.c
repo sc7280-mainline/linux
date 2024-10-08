@@ -2,6 +2,7 @@
 // Copyright (c) 2012-2017, The Linux Foundation. All rights reserved.
 // Copyright (c) 2020, Stephan Gerhold
 
+#include <linux/limits.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
 #include <sound/soc.h>
@@ -187,6 +188,53 @@ static int q6voice_put_mixer_playback(struct snd_kcontrol *kcontrol, struct snd_
 	return q6voice_put_mixer(kcontrol, ucontrol, false);
 }
 
+static int q6voice_get_topology_kctrl(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_component *c = snd_kcontrol_chip(kcontrol);
+	struct soc_mixer_control *mc =
+		(struct soc_mixer_control *)kcontrol->private_value;
+	struct q6voice *v = snd_soc_component_get_drvdata(c);
+	enum q6voice_path_type path = q6voice_get_path(mc->reg);
+	bool capture = !!mc->shift;
+
+	if (path >= Q6VOICE_PATH_COUNT) {
+		dev_err(c->dev, "Invalid DAI ID %u\n", mc->reg);
+		return -EINVAL;
+	}
+
+	ucontrol->value.integer.value[0] =
+		q6voice_get_topology(v, path, capture);
+
+	return 0;
+}
+
+static int q6voice_put_topology_kctrl(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_component *c = snd_kcontrol_chip(kcontrol);
+	struct soc_mixer_control *mc =
+		(struct soc_mixer_control *)kcontrol->private_value;
+	struct q6voice *v = snd_soc_component_get_drvdata(c);
+	u32 val = ucontrol->value.integer.value[0];
+	enum q6voice_path_type path = q6voice_get_path(mc->reg);
+	bool capture = !!mc->shift;
+
+	if (path >= Q6VOICE_PATH_COUNT) {
+		dev_err(c->dev, "Invalid DAI ID %u\n", mc->reg);
+		return -EINVAL;
+	}
+
+	q6voice_set_topology(v, path, capture, val);
+
+	return 1;
+}
+
+static const struct snd_kcontrol_new q6voice_kcontrols[] = {
+	SOC_SINGLE_EXT("VoiceMMode1 TX Topology", VOICEMMODE1, 1, S32_MAX, 0,
+		       q6voice_get_topology_kctrl, q6voice_put_topology_kctrl),
+	SOC_SINGLE_EXT("VoiceMMode1 RX Topology", VOICEMMODE1, 0, S32_MAX, 0,
+		       q6voice_get_topology_kctrl, q6voice_put_topology_kctrl),
+};
+
 static const struct snd_kcontrol_new cs_voice_tx_mixer_controls[] = {
 	SOC_SINGLE_EXT("PRI_MI2S_TX", PRIMARY_MI2S_TX, CS_VOICE, 1, 0,
 		       q6voice_get_mixer_capture, q6voice_put_mixer_capture),
@@ -326,6 +374,8 @@ static const struct snd_soc_component_driver q6voice_dai_component = {
 	.name = DRV_NAME,
 	.open = q6voice_dai_open,
 
+	.controls = q6voice_kcontrols,
+	.num_controls = ARRAY_SIZE(q6voice_kcontrols),
 	.dapm_widgets = q6voice_dapm_widgets,
 	.num_dapm_widgets = ARRAY_SIZE(q6voice_dapm_widgets),
 	.dapm_routes = q6voice_dapm_routes,
