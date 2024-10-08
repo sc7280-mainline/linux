@@ -7,9 +7,11 @@
 struct q6voice_session;
 
 struct q6voice_session *q6cvp_session_create(enum q6voice_path_type path,
-					     u16 tx_port, u16 rx_port);
+					     u16 tx_port, u16 rx_port,
+					     u32 tx_topo, u32 rx_topo);
 struct q6voice_session *q6cvp_session_create_v3(enum q6voice_path_type path,
-						u16 tx_port, u16 rx_port);
+						u16 tx_port, u16 rx_port,
+						u32 tx_topo, u32 rx_topo);
 int q6cvp_send_channel_info(struct q6voice_session *cvp, bool is_tx);
 int q6cvp_send_media_format(struct q6voice_session *cvp, int port_id, bool is_tx);
 int q6cvp_topology_commit(struct q6voice_session *cvp);
