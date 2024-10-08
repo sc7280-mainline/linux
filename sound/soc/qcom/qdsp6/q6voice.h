@@ -25,4 +25,9 @@ int q6voice_get_port(struct q6voice *v, enum q6voice_path_type path,
 void q6voice_set_port(struct q6voice *v, enum q6voice_path_type path,
 		      bool capture, int index);
 
+u32 q6voice_get_topology(struct q6voice *v, enum q6voice_path_type path,
+			 bool capture);
+void q6voice_set_topology(struct q6voice *v, enum q6voice_path_type path,
+			  bool capture, u32 topo);
+
 #endif /*_Q6_VOICE_H */
