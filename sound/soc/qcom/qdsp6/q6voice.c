@@ -13,6 +13,9 @@
 #include "q6mvm.h"
 #include "q6voice-common.h"
 
+#define VSS_IVOCPROC_TOPOLOGY_ID_TX_SM_ECNS		0x00010F71
+#define VSS_IVOCPROC_TOPOLOGY_ID_RX_DEFAULT		0x00010F77
+
 struct q6voice_path_runtime {
 	struct q6voice_session *sessions[Q6VOICE_SERVICE_COUNT];
 	unsigned int started;
@@ -36,9 +39,10 @@ struct q6voice {
 };
 
 static inline struct q6voice_session *session_create(enum q6voice_path_type type,
-						     int tx_port, int rx_port)
+						     int tx_port, int rx_port,
+						     u32 tx_topo, u32 rx_topo)
 {
-	return q6cvp_session_create(type, tx_port, rx_port);
+	return q6cvp_session_create(type, tx_port, rx_port, tx_topo, rx_topo);
 }
 
 static struct q6voice_session *session_create_v3(enum q6voice_path_type type,
@@ -47,7 +51,7 @@ static struct q6voice_session *session_create_v3(enum q6voice_path_type type,
 {
 	struct q6voice_session *cvp;
 
-	cvp = q6cvp_session_create_v3(type, tx_port, rx_port);
+	cvp = q6cvp_session_create_v3(type, tx_port, rx_port, tx_topo, rx_topo);
 	if (cvp == NULL)
 		return NULL;
 
@@ -88,7 +92,8 @@ static int q6voice_path_start(struct q6voice_path *p)
 		else
 			cvp = session_create(p->type,
 					     q6afe_get_port_id(p->tx_port),
-					     q6afe_get_port_id(p->rx_port));
+					     q6afe_get_port_id(p->rx_port),
+					     p->tx_topo, p->rx_topo);
 
 		if (IS_ERR(cvp))
 			return PTR_ERR(cvp);
@@ -298,6 +303,30 @@ void q6voice_set_port(struct q6voice *v, enum q6voice_path_type path,
 		p->rx_port = index;
 }
 EXPORT_SYMBOL_GPL(q6voice_set_port);
+
+u32 q6voice_get_topology(struct q6voice *v, enum q6voice_path_type path,
+			 bool capture)
+{
+	struct q6voice_path *p = &v->paths[path];
+
+	if (capture)
+		return p->tx_topo;
+	else
+		return p->rx_topo;
+}
+EXPORT_SYMBOL_GPL(q6voice_get_topology);
+
+void q6voice_set_topology(struct q6voice *v, enum q6voice_path_type path,
+			  bool capture, u32 topo)
+{
+	struct q6voice_path *p = &v->paths[path];
+
+	if (capture)
+		p->tx_topo = topo;
+	else
+		p->rx_topo = topo;
+}
+EXPORT_SYMBOL_GPL(q6voice_set_topology);
 
 MODULE_AUTHOR("Stephan Gerhold <stephan@gerhold.net>");
 MODULE_DESCRIPTION("Q6Voice driver");
