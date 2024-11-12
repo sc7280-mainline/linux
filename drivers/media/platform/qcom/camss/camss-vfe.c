@@ -1794,9 +1794,9 @@ int msm_vfe_register_entities(struct vfe_device *vfe,
 				&video_out->vdev.entity, 0,
 				MEDIA_LNK_FL_IMMUTABLE | MEDIA_LNK_FL_ENABLED);
 		if (ret < 0) {
-			dev_err(dev, "Failed to link %s->%s entities: %d\n",
-				sd->entity.name, video_out->vdev.entity.name,
-				ret);
+			camss_link_err(vfe->camss, sd->entity.name,
+				       video_out->vdev.entity.name,
+				       ret);
 			goto error_link;
 		}
 	}

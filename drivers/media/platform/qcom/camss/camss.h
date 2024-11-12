@@ -154,5 +154,9 @@ void camss_pm_domain_off(struct camss *camss, int id);
 int camss_vfe_get(struct camss *camss, int id);
 void camss_vfe_put(struct camss *camss, int id);
 void camss_delete(struct camss *camss);
+void camss_link_err(struct camss *camss,
+		    const char *src_name,
+		    const char *sink_name,
+		    int ret);
 
 #endif /* QC_MSM_CAMSS_H */
