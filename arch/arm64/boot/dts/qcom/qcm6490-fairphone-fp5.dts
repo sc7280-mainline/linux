@@ -659,7 +659,8 @@
 };
 
 &cci0_i2c0 {
-	/* IMX800 @ 1a */
+	/* actuator@c (asahi-kasei,ak7377) */
+	/* camera@1a (sony,imx800) */
 
 	eeprom@50 {
 		compatible = "puya,p24c256c", "atmel,24c256";
@@ -667,6 +668,8 @@
 		vcc-supply = <&vreg_l6p>;
 		read-only;
 	};
+
+	/* actuator@72 (dongwoon,dw9784) OIS */
 };
 
 &cci0_i2c1 {
