@@ -664,6 +664,14 @@
 	status = "okay";
 
 	ports {
+		port@0 {
+			csiphy0_ep: endpoint {
+				data-lanes = <0 1 2>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_CPHY>;
+				remote-endpoint = <&camera_imx800_ep>;
+			};
+		};
+
 		port@1 {
 			csiphy1_ep: endpoint {
 				clock-lanes = <7>;
@@ -689,7 +697,36 @@
 
 &cci0_i2c0 {
 	/* actuator@c (asahi-kasei,ak7377) */
-	/* camera@1a (sony,imx800) */
+
+	camera@1a {
+		compatible = "sony,imx800";
+		reg = <0x1a>;
+
+		vana1-supply = <&vreg_l5p>;
+		vana2-supply = <&vreg_ois_avdd0_1p8>;
+		vif-supply = <&vreg_l6p>;
+		vdig-supply = <&vreg_ois_dvdd_1p1>;
+
+		clocks = <&camcc CAM_CC_MCLK0_CLK>;
+		assigned-clocks = <&camcc CAM_CC_MCLK0_CLK>;
+		assigned-clock-rates = <24000000>;
+
+		reset-gpios = <&tlmm 20 GPIO_ACTIVE_LOW>;
+		pinctrl-0 = <&cam_mclk0_default>;
+		pinctrl-names = "default";
+
+		orientation = <1>; /* Rear facing */
+		rotation = <270>;
+
+		port {
+			camera_imx800_ep: endpoint {
+				data-lanes = <1 2 3>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_CPHY>;
+				link-frequencies = /bits/ 64 <130000000>;
+				remote-endpoint = <&csiphy0_ep>;
+			};
+		};
+	};
 
 	eeprom@50 {
 		compatible = "puya,p24c256c", "atmel,24c256";
