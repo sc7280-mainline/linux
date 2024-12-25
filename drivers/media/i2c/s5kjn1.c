@@ -49,7 +49,8 @@
 #define S5KJN1_REG_HOLD		0x0104
 
 /* Input clock rate */
-#define S5KJN1_INCLK_RATE	24000000
+#define S5KJN1_INCLK_RATE_19Mhz	19200000
+#define S5KJN1_INCLK_RATE_24Mhz	24000000
 
 /* CSI2 HW configuration */
 #define S5KJN1_LINK_FREQ	600000000
@@ -76,6 +77,11 @@ struct s5kjn1_reg {
 struct s5kjn1_reg_list {
 	u32 num_of_regs;
 	const struct s5kjn1_reg *regs;
+};
+
+static const int s5kjn1_inclk_list[] = {
+	S5KJN1_INCLK_RATE_19Mhz,
+	S5KJN1_INCLK_RATE_24Mhz,
 };
 
 /**
@@ -995,6 +1001,22 @@ static int s5kjn1_detect(struct s5kjn1 *s5kjn1)
 }
 
 /**
+ * s5kjn1_check_inclk_freq() - Сheck inclk frequency
+ * @rate: inclk frequency from clk_get_rate()
+ *
+ * Return: 0 if successful, -ENODEV if inclk freq does not match
+ */
+static int s5kjn1_check_inclk_freq(const int rate)
+{
+	for (int i = 0; i < ARRAY_SIZE(s5kjn1_inclk_list); i++) {
+		if (rate == s5kjn1_inclk_list[i])
+			return 0;
+	}
+
+	return -ENODEV;
+}
+
+/**
  * s5kjn1_parse_hw_config() - Parse HW configuration and check if supported
  * @s5kjn1: pointer to s5kjn1 device
  *
@@ -1007,7 +1029,6 @@ static int s5kjn1_parse_hw_config(struct s5kjn1 *s5kjn1)
 		.bus_type = V4L2_MBUS_CSI2_DPHY
 	};
 	struct fwnode_handle *ep;
-	unsigned long rate;
 	unsigned int i;
 	int ret;
 
@@ -1030,10 +1051,10 @@ static int s5kjn1_parse_hw_config(struct s5kjn1 *s5kjn1)
 		return PTR_ERR(s5kjn1->inclk);
 	}
 
-	rate = clk_get_rate(s5kjn1->inclk);
-	if (rate != S5KJN1_INCLK_RATE) {
+	ret = s5kjn1_check_inclk_freq(clk_get_rate(s5kjn1->inclk));
+	if (ret) {
 		dev_err(s5kjn1->dev, "inclk frequency mismatch\n");
-		return -EINVAL;
+		return ret;
 	}
 
 	/* Get optional DT defined regulators */
