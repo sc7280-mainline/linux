@@ -1,12 +1,9 @@
 # Makefile for the focaltech touchscreen drivers.
 
+#focaltech_ts-y += focaltech_core.o focaltech_flash.o
 
-fts_tp-y	+=  focaltech_core.o
-fts_tp-y	+=  focaltech_ex_fun.o
-fts_tp-y	+=  focaltech_ex_mode.o
+#obj-$(CONFIG_TOUCHSCREEN_FTS_CORE)	+= focaltech_ts.o
+#obj-$(CONFIG_TOUCHSCREEN_FTS_SPI)	+= focaltech_spi.o
 
-fts_tp-y	+=  focaltech_flash.o
-
-fts_tp-y	+=  focaltech_spi.o
-
-obj-$(CONFIG_TOUCHSCREEN_FTS)        += fts_tp.o
+focaltech_ts-y += focaltech_spi.o focaltech_core.o focaltech_flash.o
+obj-$(CONFIG_TOUCHSCREEN_FTS_SPI)	+= focaltech_ts.o
