@@ -383,14 +383,17 @@ static int dw9800_suspend(struct device *dev)
 
 	val = round_down(dw9800_dev->focus->val, DW9800_MOVE_STEPS);
 	for (; val >= 0; val -= DW9800_MOVE_STEPS) {
+		usleep_range(dw9800_dev->move_delay_us,
+			dw9800_dev->move_delay_us + 1000);
 		ret = dw9800_set_dac(client, val);
 		if (ret) {
 			dev_err(&client->dev, "I2C write fail: %d", ret);
 			return ret;
 		}
-		usleep_range(dw9800_dev->move_delay_us,
-			     dw9800_dev->move_delay_us + 1000);
 	}
+
+	usleep_range(dw9800_dev->move_delay_us,
+		dw9800_dev->move_delay_us + 1000);
 
 	ret = i2c_smbus_write_byte_data(client, DW9800_RING_PD_CONTROL_REG,
 				DW9800_PD_MODE_EN);
