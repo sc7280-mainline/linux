@@ -958,7 +958,14 @@
 };
 
 &cci1_i2c1 {
-	/* actuator (For Wide sensor) @ 0xc */
+	camw_ak7377: actuator@c {
+		compatible = "asahi-kasei,ak7377";
+		reg = <0x0c>;
+
+		vin-supply = <&vreg_cam_vio_1p8>;
+		vdd-supply = <&vreg_camw_vaf_1p8>;
+	};
+
 	/* C-PHY sony,imx766 (Wide) @ 0x10 */
 
 	camw_gt24p128e: eeprom@50 {
