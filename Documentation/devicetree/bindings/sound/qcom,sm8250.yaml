@@ -27,11 +27,8 @@ properties:
               - qcom,sm8650-sndcard
               - qcom,sm8750-sndcard
           - const: qcom,sm8450-sndcard
-      - items:
-          - enum:
-              - fairphone,fp5-sndcard
-          - const: qcom,qcm6490-idp-sndcard
       - enum:
+          - fairphone,fp5-sndcard
           - qcom,apq8096-sndcard
           - qcom,qcm6490-idp-sndcard
           - qcom,qcs6490-rb3gen2-sndcard
