@@ -1255,7 +1255,7 @@
 };
 
 &sound {
-	compatible = "fairphone,fp5-sndcard", "qcom,qcm6490-idp-sndcard";
+	compatible = "fairphone,fp5-sndcard";
 	model = "Fairphone 5";
 
 	mm1-dai-link {
