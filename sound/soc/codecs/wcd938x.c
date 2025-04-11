@@ -12,6 +12,7 @@
 #include <linux/component.h>
 #include <sound/tlv.h>
 #include <linux/of_gpio.h>
+#include <linux/of_graph.h>
 #include <linux/of.h>
 #include <sound/jack.h>
 #include <sound/pcm.h>
@@ -20,6 +21,8 @@
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>
 #include <linux/regulator/consumer.h>
+#include <linux/usb/typec_mux.h>
+#include <linux/usb/typec_altmode.h>
 
 #include "wcd-clsh-v2.h"
 #include "wcd-mbhc-v2.h"
@@ -158,6 +161,13 @@ struct wcd938x_priv {
 	struct device_node *rxnode, *txnode;
 	struct regmap *regmap;
 	struct mutex micb_lock;
+	/* typec handling */
+	bool typec_analog_mux;
+#if IS_ENABLED(CONFIG_TYPEC)
+	enum typec_orientation typec_orientation;
+	unsigned long typec_mode;
+	struct typec_switch *typec_switch;
+#endif /* CONFIG_TYPEC */
 	/* mbhc module */
 	struct wcd_mbhc *wcd_mbhc;
 	struct wcd_mbhc_config mbhc_cfg;
@@ -2425,7 +2435,7 @@ static void wcd938x_mbhc_moisture_config(struct snd_soc_component *component)
 {
 	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(component);
 
-	if (wcd938x->mbhc_cfg.moist_rref == R_OFF) {
+	if (wcd938x->mbhc_cfg.moist_rref == R_OFF || wcd938x->typec_analog_mux) {
 		snd_soc_component_write_field(component, WCD938X_MBHC_NEW_CTL_2,
 				    WCD938X_M_RTH_CTL_MASK, R_OFF);
 		return;
@@ -2461,7 +2471,7 @@ static bool wcd938x_mbhc_get_moisture_status(struct snd_soc_component *component
 	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(component);
 	bool ret = false;
 
-	if (wcd938x->mbhc_cfg.moist_rref == R_OFF) {
+	if (wcd938x->mbhc_cfg.moist_rref == R_OFF || wcd938x->typec_analog_mux) {
 		snd_soc_component_write_field(component, WCD938X_MBHC_NEW_CTL_2,
 				    WCD938X_M_RTH_CTL_MASK, R_OFF);
 		goto done;
@@ -3204,6 +3214,40 @@ static const struct snd_soc_component_driver soc_codec_dev_wcd938x = {
 	.endianness = 1,
 };
 
+#if IS_ENABLED(CONFIG_TYPEC)
+/* Get USB-C plug orientation to provide swap event for MBHC */
+static int wcd938x_typec_switch_set(struct typec_switch_dev *sw,
+				    enum typec_orientation orientation)
+{
+	struct wcd938x_priv *wcd938x = typec_switch_get_drvdata(sw);
+
+	wcd938x->typec_orientation = orientation;
+
+	return 0;
+}
+
+static int wcd938x_typec_mux_set(struct typec_mux_dev *mux,
+				 struct typec_mux_state *state)
+{
+	struct wcd938x_priv *wcd938x = typec_mux_get_drvdata(mux);
+	unsigned int previous_mode = wcd938x->typec_mode;
+
+	if (!wcd938x->wcd_mbhc)
+		return -EINVAL;
+
+	if (wcd938x->typec_mode != state->mode) {
+		wcd938x->typec_mode = state->mode;
+
+		if (wcd938x->typec_mode == TYPEC_MODE_AUDIO)
+			return wcd_mbhc_typec_report_plug(wcd938x->wcd_mbhc);
+		else if (previous_mode == TYPEC_MODE_AUDIO)
+			return wcd_mbhc_typec_report_unplug(wcd938x->wcd_mbhc);
+	}
+
+	return 0;
+}
+#endif /* CONFIG_TYPEC */
+
 static void wcd938x_dt_parse_micbias_info(struct device *dev, struct wcd938x_priv *wcd)
 {
 	struct device_node *np = dev->of_node;
@@ -3237,11 +3281,18 @@ static void wcd938x_dt_parse_micbias_info(struct device *dev, struct wcd938x_pri
 
 static bool wcd938x_swap_gnd_mic(struct snd_soc_component *component, bool active)
 {
+	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(component);
 	int value;
 
-	struct wcd938x_priv *wcd938x;
+	if (wcd938x->typec_analog_mux && wcd938x->typec_switch) {
+		/* Report inversion via Type Switch of USBSS */
+		typec_switch_set(wcd938x->typec_switch,
+				 wcd938x->typec_orientation == TYPEC_ORIENTATION_REVERSE ?
+					TYPEC_ORIENTATION_NORMAL : TYPEC_ORIENTATION_REVERSE);
+		return true;
+	}
 
-	wcd938x = snd_soc_component_get_drvdata(component);
+	/* If USB-C is not used, swap using us_euro_gpio */
 
 	value = gpiod_get_value(wcd938x->us_euro_gpio);
 
@@ -3254,6 +3305,9 @@ static bool wcd938x_swap_gnd_mic(struct snd_soc_component *component, bool activ
 static int wcd938x_populate_dt_data(struct wcd938x_priv *wcd938x, struct device *dev)
 {
 	struct wcd_mbhc_config *cfg = &wcd938x->mbhc_cfg;
+#if IS_ENABLED(CONFIG_TYPEC)
+	struct device_node *np;
+#endif /* CONFIG_TYPEC */
 	int ret;
 
 	wcd938x->reset_gpio = of_get_named_gpio(dev->of_node, "reset-gpios", 0);
@@ -3296,6 +3350,18 @@ static int wcd938x_populate_dt_data(struct wcd938x_priv *wcd938x, struct device 
 	cfg->hph_thr = 50;
 
 	wcd_dt_parse_mbhc_data(dev, cfg);
+
+#if IS_ENABLED(CONFIG_TYPEC)
+	/*
+	 * Is node has a port and a valid remote endpoint
+	 * consider HP lines are connected to the USBSS part
+	 */
+	np = of_graph_get_remote_node(dev->of_node, 0, 0);
+	if (np) {
+		wcd938x->typec_analog_mux = true;
+		cfg->typec_analog_mux = true;
+	}
+#endif /* CONFIG_TYPEC */
 
 	return 0;
 }
@@ -3381,11 +3447,25 @@ static int wcd938x_bind(struct device *dev)
 	struct wcd938x_priv *wcd938x = dev_get_drvdata(dev);
 	int ret;
 
+#if IS_ENABLED(CONFIG_TYPEC)
+	/*
+	 * Get USBSS type-c switch to send gnd/mic swap events
+	 * typec_switch is fetched now to avoid a probe deadlock since
+	 * the USBSS depends on the typec_mux register in wcd938x_probe()
+	 */
+	if (wcd938x->typec_analog_mux) {
+		wcd938x->typec_switch = fwnode_typec_switch_get(dev->fwnode);
+		if (IS_ERR(wcd938x->typec_switch))
+			return dev_err_probe(dev, PTR_ERR(wcd938x->typec_switch),
+					     "failed to acquire orientation-switch\n");
+	}
+#endif /* CONFIG_TYPEC */
+
 	ret = component_bind_all(dev, wcd938x);
 	if (ret) {
 		dev_err(dev, "%s: Slave bind failed, ret = %d\n",
 			__func__, ret);
-		return ret;
+		goto err_put_typec_switch;
 	}
 
 	wcd938x->rxdev = wcd938x_sdw_device_get(wcd938x->rxnode);
@@ -3474,6 +3554,11 @@ err_put_rxdev:
 	put_device(wcd938x->rxdev);
 err_unbind:
 	component_unbind_all(dev, wcd938x);
+err_put_typec_switch:
+#if IS_ENABLED(CONFIG_TYPEC)
+	if (wcd938x->typec_analog_mux)
+		typec_switch_put(wcd938x->typec_switch);
+#endif /* CONFIG_TYPEC */
 
 	return ret;
 }
@@ -3495,6 +3580,69 @@ static const struct component_master_ops wcd938x_comp_ops = {
 	.bind   = wcd938x_bind,
 	.unbind = wcd938x_unbind,
 };
+
+static void __maybe_unused wcd938x_typec_mux_unregister(void *data)
+{
+	struct typec_mux_dev *typec_mux = data;
+
+	typec_mux_unregister(typec_mux);
+}
+
+static void __maybe_unused wcd938x_typec_switch_unregister(void *data)
+{
+	struct typec_switch_dev *typec_sw = data;
+
+	typec_switch_unregister(typec_sw);
+}
+
+// FIXME continue on this function
+static int wcd938x_add_typec(struct wcd938x_priv *wcd938x, struct device *dev)
+{
+#if IS_ENABLED(CONFIG_TYPEC)
+	int ret;
+	struct typec_mux_dev *typec_mux;
+	struct typec_switch_dev *typec_sw;
+	struct typec_mux_desc mux_desc = {
+		.drvdata = wcd938x,
+		.fwnode = dev_fwnode(dev),
+		.set = wcd938x_typec_mux_set,
+	};
+	struct typec_switch_desc sw_desc = {
+		.drvdata = wcd938x,
+		.fwnode = dev_fwnode(dev),
+		.set = wcd938x_typec_switch_set,
+	};
+
+	/*
+	 * Is USBSS is used to mux analog lines,
+	 * register a typec mux/switch to get typec events
+	 */
+	if (!wcd938x->typec_analog_mux)
+		return 0;
+
+	typec_mux = typec_mux_register(dev, &mux_desc);
+	if (IS_ERR(typec_mux))
+		return dev_err_probe(dev, PTR_ERR(typec_mux),
+				     "failed to register typec mux\n");
+
+	ret = devm_add_action_or_reset(dev, wcd938x_typec_mux_unregister,
+				       typec_mux);
+	if (ret)
+		return ret;
+
+	typec_sw = typec_switch_register(dev, &sw_desc);
+	if (IS_ERR(typec_sw))
+		return dev_err_probe(dev, PTR_ERR(typec_sw),
+				     "failed to register typec switch\n");
+
+	ret = devm_add_action_or_reset(dev, wcd938x_typec_switch_unregister,
+				       typec_sw);
+	if (ret)
+		return ret;
+#endif
+
+	return 0;
+}
 
 static int wcd938x_add_slave_components(struct wcd938x_priv *wcd938x,
 					struct device *dev,
@@ -3543,6 +3691,10 @@ static int wcd938x_probe(struct platform_device *pdev)
 	ret = wcd938x_populate_dt_data(wcd938x, dev);
 	if (ret)
 		return ret;
+
+	ret = wcd938x_add_typec(wcd938x, dev);
+	if (ret)
+		goto err_disable_regulators;
 
 	ret = wcd938x_add_slave_components(wcd938x, dev, &match);
 	if (ret)
