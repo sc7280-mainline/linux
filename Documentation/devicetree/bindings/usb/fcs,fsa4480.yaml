@@ -35,49 +35,61 @@ properties:
     description: Flag the port as possible handler of orientation switching
     type: boolean
 
-  port:
-    $ref: /schemas/graph.yaml#/$defs/port-base
-    description:
-      A port node to link the FSA4480 to a TypeC controller for the purpose of
-      handling altmode muxing and orientation switching.
-    unevaluatedProperties: false
-
+  ports:
+    $ref: /schemas/graph.yaml#/properties/ports
     properties:
-      endpoint:
-        $ref: /schemas/graph.yaml#/$defs/endpoint-base
+      port@0:
+        $ref: /schemas/graph.yaml#/$defs/port-base
+        description:
+          A port node to link the FSA4480 to a TypeC controller for the purpose of
+          handling altmode muxing and orientation switching.
+
         unevaluatedProperties: false
 
         properties:
-          data-lanes:
-            $ref: /schemas/types.yaml#/definitions/uint32-array
-            description:
-              Specifies how the AUX+/- lines are connected to SBU1/2.
-            oneOf:
-              - items:
-                  - const: 0
-                  - const: 1
-                description: |
-                  Default AUX/SBU layout (FSA4480)
-                  - AUX+ connected to SBU2
-                  - AUX- connected to SBU1
-                  Default AUX/SBU layout (OCP96011)
-                  - AUX+ connected to SBU1
-                  - AUX- connected to SBU2
-              - items:
-                  - const: 1
-                  - const: 0
-                description: |
-                  Swapped AUX/SBU layout (FSA4480)
-                  - AUX+ connected to SBU1
-                  - AUX- connected to SBU2
-                  Swapped AUX/SBU layout (OCP96011)
-                  - AUX+ connected to SBU2
-                  - AUX- connected to SBU1
+          endpoint:
+            $ref: /schemas/graph.yaml#/$defs/endpoint-base
+            unevaluatedProperties: false
+
+            properties:
+              data-lanes:
+                $ref: /schemas/types.yaml#/definitions/uint32-array
+                description:
+                  Specifies how the AUX+/- lines are connected to SBU1/2.
+                oneOf:
+                  - items:
+                      - const: 0
+                      - const: 1
+                    description: |
+                      Default AUX/SBU layout (FSA4480)
+                      - AUX+ connected to SBU2
+                      - AUX- connected to SBU1
+                      Default AUX/SBU layout (OCP96011)
+                      - AUX+ connected to SBU1
+                      - AUX- connected to SBU2
+                  - items:
+                      - const: 1
+                      - const: 0
+                    description: |
+                      Swapped AUX/SBU layout (FSA4480)
+                      - AUX+ connected to SBU1
+                      - AUX- connected to SBU2
+                      Swapped AUX/SBU layout (OCP96011)
+                      - AUX+ connected to SBU2
+                      - AUX- connected to SBU1
+
+      port@1:
+        $ref: /schemas/graph.yaml#/properties/port
+        description:
+          A port node to link the FAS4480 to the Codec SubSystem for the
+          purpose of handling USB-C Audio Accessory Mode muxing and orientation
+          switching.
+
 
 required:
   - compatible
   - reg
-  - port
+  - ports
 
 additionalProperties: false
 
@@ -99,9 +111,24 @@ examples:
             mode-switch;
             orientation-switch;
 
-            port {
-                fsa4480_ept: endpoint {
-                    remote-endpoint = <&typec_controller>;
+            ports {
+                #address-cells = <1>;
+                #size-cells = <0>;
+
+                port@0 {
+                    reg = <0>;
+
+                    fsa4480_sbu: endpoint {
+                        remote-endpoint = <&typec_sbu>;
+                    };
+                };
+
+                port@1 {
+                    reg = <1>;
+
+                    fsa4480_codec: endpoint {
+                        remote-endpoint = <&audio_codec>;
+                    };
                 };
             };
         };
