@@ -3285,7 +3285,7 @@ static bool wcd938x_swap_gnd_mic(struct snd_soc_component *component, bool activ
 	int value;
 
 	if (wcd938x->typec_analog_mux && wcd938x->typec_switch) {
-		/* Report inversion via Type Switch of USBSS */
+		/* Report inversion via Type Switch */
 		typec_switch_set(wcd938x->typec_switch,
 				 wcd938x->typec_orientation == TYPEC_ORIENTATION_REVERSE ?
 					TYPEC_ORIENTATION_NORMAL : TYPEC_ORIENTATION_REVERSE);
@@ -3354,7 +3354,7 @@ static int wcd938x_populate_dt_data(struct wcd938x_priv *wcd938x, struct device 
 #if IS_ENABLED(CONFIG_TYPEC)
 	/*
 	 * Is node has a port and a valid remote endpoint
-	 * consider HP lines are connected to the USBSS part
+	 * consider HP lines are connected to the switch part
 	 */
 	np = of_graph_get_remote_node(dev->of_node, 0, 0);
 	if (np) {
@@ -3449,9 +3449,9 @@ static int wcd938x_bind(struct device *dev)
 
 #if IS_ENABLED(CONFIG_TYPEC)
 	/*
-	 * Get USBSS type-c switch to send gnd/mic swap events
+	 * Get type-c switch to send gnd/mic swap events
 	 * typec_switch is fetched now to avoid a probe deadlock since
-	 * the USBSS depends on the typec_mux register in wcd938x_probe()
+	 * the switch depends on the typec_mux register in wcd938x_probe()
 	 */
 	if (wcd938x->typec_analog_mux) {
 		wcd938x->typec_switch = fwnode_typec_switch_get(dev->fwnode);
@@ -3614,7 +3614,7 @@ static int wcd938x_add_typec(struct wcd938x_priv *wcd938x, struct device *dev)
 	};
 
 	/*
-	 * Is USBSS is used to mux analog lines,
+	 * Is USB-C switch is used to mux analog lines,
 	 * register a typec mux/switch to get typec events
 	 */
 	if (!wcd938x->typec_analog_mux)
