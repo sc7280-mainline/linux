@@ -1,0 +1,11 @@
+#
+# Focaltech Touchscreen driver configuration
+#
+
+config TOUCHSCREEN_FOCALTECH_FT3658U
+	tristate "Focaltech Touchscreen"
+	depends on I2C && OF
+	default m
+	help
+	  Say Y here if you have Focaltech touch panel.
+	  If unsure, say N.
