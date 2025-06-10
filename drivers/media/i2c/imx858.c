@@ -6,7 +6,6 @@
  * Based on Sony imx412 camera driver
  * Copyright (C) 2021 Intel Corporation
  */
-#include <linux/unaligned.h>
 
 #include <linux/clk.h>
 #include <linux/delay.h>
@@ -20,31 +19,31 @@
 #include <media/v4l2-fwnode.h>
 #include <media/v4l2-subdev.h>
 
+/* Chip ID */
+#define IMX858_REG_CHIP_ID		CCI_REG16(0x0016)
+#define IMX858_CHIP_ID			0x0858
+
 /* Streaming Mode */
-#define IMX858_REG_MODE_SELECT	CCI_REG8(0x0100)
-#define IMX858_MODE_STANDBY	0x00
-#define IMX858_MODE_STREAMING	0x01
+#define IMX858_REG_MODE_SELECT		CCI_REG8(0x0100)
+#define IMX858_MODE_STANDBY		0x00
+#define IMX858_MODE_STREAMING		0x01
 
 /* Lines per frame */
-#define IMX858_REG_LPFR		CCI_REG16(0x0340)
-
-/* Chip ID */
-#define IMX858_REG_ID		CCI_REG16(0x0016)
-#define IMX858_ID		0x858
+#define IMX858_REG_LPFR			CCI_REG16(0x0340)
 
 /* Exposure control */
-#define IMX858_REG_EXPOSURE_CIT	CCI_REG16(0x0202)
-#define IMX858_EXPOSURE_MIN	8
-#define IMX858_EXPOSURE_OFFSET	22
-#define IMX858_EXPOSURE_STEP	1
-#define IMX858_EXPOSURE_DEFAULT	0x0648
+#define IMX858_REG_EXPOSURE		CCI_REG16(0x0202)
+#define IMX858_EXPOSURE_MIN		8
+#define IMX858_EXPOSURE_OFFSET		22
+#define IMX858_EXPOSURE_STEP		1
+#define IMX858_EXPOSURE_DEFAULT		0x0648
 
 /* Analog gain control */
-#define IMX858_REG_AGAIN	CCI_REG16(0x0204)
-#define IMX858_AGAIN_MIN	0
-#define IMX858_AGAIN_MAX	978
-#define IMX858_AGAIN_STEP	1
-#define IMX858_AGAIN_DEFAULT	0
+#define IMX858_REG_ANALOG_GAIN		CCI_REG16(0x0204)
+#define IMX858_ANA_GAIN_MIN		0
+#define IMX858_ANA_GAIN_MAX		978
+#define IMX858_ANA_GAIN_STEP		1
+#define IMX858_ANA_GAIN_DEFAULT		0
 
 /* Group hold register */
 #define IMX858_REG_HOLD		CCI_REG8(0x0104)
@@ -575,11 +574,11 @@ static int imx858_update_exp_gain(struct imx858 *imx858, u32 exposure, u32 gain)
 	if (ret)
 		goto error_release_group_hold;
 
-	cci_write(imx858->regmap, IMX858_REG_EXPOSURE_CIT, exposure, &ret);
+	cci_write(imx858->regmap, IMX858_REG_EXPOSURE, exposure, &ret);
 	if (ret)
 		goto error_release_group_hold;
 
-	cci_write(imx858->regmap, IMX858_REG_AGAIN, gain, &ret);
+	cci_write(imx858->regmap, IMX858_REG_ANALOG_GAIN, gain, &ret);
 
 error_release_group_hold:
 	cci_write(imx858->regmap, IMX858_REG_HOLD, 0, NULL);
@@ -906,13 +905,13 @@ static int imx858_detect(struct imx858 *imx858)
 	int ret;
 	u64 val;
 
-	ret = cci_read(imx858->regmap, IMX858_REG_ID, &val, NULL);
+	ret = cci_read(imx858->regmap, IMX858_REG_CHIP_ID, &val, NULL);
 	if (ret)
 		return ret;
 
-	if (val != IMX858_ID) {
+	if (val != IMX858_CHIP_ID) {
 		dev_err(imx858->dev, "chip id mismatch: %x!=%llx\n",
-			IMX858_ID, val);
+			IMX858_CHIP_ID, val);
 		return -ENXIO;
 	}
 
@@ -1130,10 +1129,10 @@ static int imx858_init_controls(struct imx858 *imx858)
 	imx858->again_ctrl = v4l2_ctrl_new_std(ctrl_hdlr,
 					       &imx858_ctrl_ops,
 					       V4L2_CID_ANALOGUE_GAIN,
-					       IMX858_AGAIN_MIN,
-					       IMX858_AGAIN_MAX,
-					       IMX858_AGAIN_STEP,
-					       IMX858_AGAIN_DEFAULT);
+					       IMX858_ANA_GAIN_MIN,
+					       IMX858_ANA_GAIN_MAX,
+					       IMX858_ANA_GAIN_STEP,
+					       IMX858_ANA_GAIN_DEFAULT);
 
 	v4l2_ctrl_cluster(2, &imx858->exp_ctrl);
 
