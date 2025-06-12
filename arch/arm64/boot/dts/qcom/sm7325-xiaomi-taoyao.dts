@@ -580,10 +580,6 @@
 	};
 };
 
-&dispcc {
-	status = "disabled";
-};
-
 &gcc {
 	protected-clocks = <GCC_CFG_NOC_LPASS_CLK>,
 			   <GCC_MSS_CFG_AHB_CLK>,
@@ -647,6 +643,48 @@
 &lpass_audiocc {
 	compatible = "qcom,qcm6490-lpassaudiocc";
 	/delete-property/ power-domains;
+};
+
+&mdss {
+	status = "okay";
+};
+
+&mdss_dsi {
+	vdda-supply = <&vreg_l6b_1p2>;
+
+	status = "okay";
+
+	panel@0 {
+		compatible = "xiaomi,taoyao-panel";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 44 GPIO_ACTIVE_LOW>;
+
+		vdd-supply = <&vreg_l13c_3p0>;
+		vddio-supply = <&vreg_l12c_1p8>;
+		dvdd-supply = <&vreg_oled_dvdd>;
+
+		pinctrl-0 = <&sde_dsi_active>, <&sde_te_active_sleep>;
+		pinctrl-1 = <&sde_dsi_sleep>, <&sde_te_active_sleep>;
+		pinctrl-names = "default", "sleep";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi_phy {
+	vdds-supply = <&vreg_l10c_0p88>;
+
+	status = "okay";
 };
 
 &pm7325_gpios {
