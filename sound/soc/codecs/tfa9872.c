@@ -221,6 +221,7 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 	struct device *dev = &i2c->dev;
 	struct regmap *rmap;
 	unsigned int rev;
+	u32 channel_index = 0;
 	int ret;
 
 	rmap = devm_regmap_init_i2c(i2c, &tfa987x_regmap_config);
@@ -245,6 +246,8 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 			dev_err(dev, "Unsupported chip revision: 0x%04x\n", rev);
 			return -ENODEV;
 	}
+
+	of_property_read_u32(dev->of_node, "sound-channel", &channel_index);
 
 	/* Perform soft reset */
 	regmap_write(rmap, TFA987X_SYS_CTRL0, TFA987X_SYS_CTRL0_I2CR_MSK);
@@ -280,7 +283,7 @@ static int tfa987x_i2c_probe(struct i2c_client *i2c)
 				 TFA987X_TDM_CFG3_SPKE_MSK);
 	regmap_update_bits(rmap, TFA987X_TDM_CFG6,
 				 TFA987X_TDM_CFG6_SPKS_MSK,
-				 FIELD_PREP(TFA987X_TDM_CFG6_SPKS_MSK, 0));
+				 FIELD_PREP(TFA987X_TDM_CFG6_SPKS_MSK, channel_index));
 
 	if ((rev & 0xff) == 0x72)
 		regmap_update_bits(rmap, TFA987X_MODE1_DET1,
