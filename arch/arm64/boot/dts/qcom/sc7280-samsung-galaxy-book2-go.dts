@@ -23,6 +23,15 @@
 #include "pm8350c.dtsi" /* PM7350C */
 #include "pmk8350.dtsi" /* PMK7325 */
 
+// /delete-node/ &ipa_fw_mem;
+// /delete-node/ &rmtfs_mem;
+// /delete-node/ &adsp_mem;
+// /delete-node/ &cdsp_mem;
+// /delete-node/ &video_mem;
+// /delete-node/ &wlan_ce_mem;
+// /delete-node/ &wpss_mem;
+// /delete-node/ &xbl_mem;
+
 / {
 	model = "Samsung Galaxy Book2 Go";
 	compatible = "samsung,book2go", "qcom,sc7280";
@@ -35,11 +44,100 @@
 		pinctrl-0 = <&hall_int_default>;
 
 		switch-lid {
-			gpios = <&tlmm 35 GPIO_ACTIVE_LOW>; //gpio35 in sc7280.dtsi corresponds with qup_spi8_cs_gpio?
+			label = "Switch Lid";
+			gpios = <&tlmm 35 GPIO_ACTIVE_LOW>;
 			linux,input-type = <EV_SW>;
 			linux,code = <SW_LID>;
+			// wakeup-event-action = <EV_ACT_DEASSERTED>;
 			wakeup-source;
-			wakeup-event-action = <EV_ACT_DEASSERTED>;
+		};
+	};
+
+	pmic-glink {
+		compatible = "qcom,qcm6490-pmic-glink", "qcom,pmic-glink";
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+		orientation-gpios = <&tlmm 140 GPIO_ACTIVE_HIGH>;
+
+		connector@0 {
+			compatible = "usb-c-connector";
+			reg = <0>;
+
+			label = "Type C Left";
+			power-role = "dual";
+			data-role = "dual";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+
+					pmic_glink_c1_hs_in: endpoint {
+						remote-endpoint = <&hub_usb_c1_con_hs>;
+					};
+				};
+			};
+		};
+
+		connector@1 {
+			compatible = "usb-c-connector";
+			reg = <0>;
+
+			label = "Type C Right";
+			power-role = "dual";
+			data-role = "dual";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+
+					pmic_glink_c2_hs_in: endpoint {
+						remote-endpoint = <&hub_usb_c2_con_hs>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+
+					pmic_glink_c2_ss_in: endpoint {
+						remote-endpoint = <&usb_dp_qmpphy_out>;
+					};
+				};
+
+				// port@2 {
+				// 	reg = <2>;
+
+				// 	pmic_glink_c2_sbu_in: endpoint {
+				// 		remote-endpoint = <&redriver_usb_con_sbu>;
+				// 	};
+				// };
+			};
+		};
+
+		connector@2 {
+			compatible = "usb-a-connector";
+			reg = <2>;
+			power-role = "dual";
+			data-role = "dual";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+
+					pmic_glink_a1_hs_in: endpoint {
+						remote-endpoint = <&hub_usb_a1_con_hs>;
+					};
+				};
+			};
 		};
 	};
 };
@@ -202,6 +300,26 @@
 	};
 };
 
+&remoteproc_adsp {
+	firmware-name = "qcom/qcs6490/adsp.mbn";
+	status = "okay";
+};
+
+&remoteproc_cdsp {
+	firmware-name = "qcom/qcs6490/cdsp.mbn";
+	status = "okay";
+};
+
+&remoteproc_mpss {
+	firmware-name = "qcom/qcs6490/modem.mbn";
+	status = "okay";
+};
+
+&remoteproc_wpss {
+	firmware-name = "qcom/qcs6490/wpss.mbn";
+	status = "okay";
+};
+
 &ufs_mem_hc {
 	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
 	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
@@ -222,8 +340,84 @@
 &ufs_mem_phy {
 	/*
 	 * FP5 dts has stuff here about regulators/supplies, no idea which ones I should use on this board
-	 * Also no device in dsdt on 1D87000
+	 * Also no device in dsdt on 1D87000.
 	 */
+	vdda-phy-supply = <&vreg_l10c_0p8>;
+	vdda-pll-supply = <&vreg_l6b_1p2>;
 
 	status = "okay";
+};
+
+&usb_1 {
+	status = "okay";
+};
+
+&usb_1_dwc3 {
+	dr_mode = "host";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	/* 2.x hub on port 1 */
+	usb_hub_2_x: hub@1 {
+		compatible = "usb424,2514";
+		reg = <1>;
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+		
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@1 {
+				reg = <1>;
+
+				hub_usb_c1_con_hs: endpoint {
+					remote-endpoint = <&pmic_glink_c1_hs_in>;
+				};
+			};
+
+			port@2 {
+				reg = <2>;
+
+				hub_usb_c2_con_hs: endpoint {
+					remote-endpoint = <&pmic_glink_c2_hs_in>;
+				};
+			};
+
+			port@3 {
+				reg = <3>;
+
+				hub_usb_a1_con_hs: endpoint {
+					remote-endpoint = <&pmic_glink_a1_hs_in>;
+				};
+			};
+		};
+
+		webcam@4 {
+			compatible = "usb4f2,b72f";
+			reg = <4>;
+		};
+	};
+
+};
+
+&usb_1_hsphy {
+	status = "okay";
+
+	qcom,hs-rise-fall-time-bp = <0>;
+	qcom,squelch-detector-bp = <(-2090)>;
+	qcom,hs-disconnect-bp = <1743>;
+	qcom,hs-amplitude-bp = <1780>;
+	qcom,hs-crossover-voltage-microvolt = <(-31000)>;
+	qcom,hs-output-impedance-micro-ohms = <2600000>;
+};
+
+&usb_1_qmpphy {
+	status = "okay";
+};
+
+&usb_dp_qmpphy_out {
+	remote-endpoint = <&pmic_glink_c2_ss_in>;
 };
