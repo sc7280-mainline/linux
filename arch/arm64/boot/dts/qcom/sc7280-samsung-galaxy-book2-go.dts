@@ -23,14 +23,14 @@
 #include "pm8350c.dtsi" /* PM7350C */
 #include "pmk8350.dtsi" /* PMK7325 */
 
-// /delete-node/ &ipa_fw_mem;
-// /delete-node/ &rmtfs_mem;
+/delete-node/ &ipa_fw_mem;
+/delete-node/ &rmtfs_mem;
 // /delete-node/ &adsp_mem;
 // /delete-node/ &cdsp_mem;
 // /delete-node/ &video_mem;
 // /delete-node/ &wlan_ce_mem;
 // /delete-node/ &wpss_mem;
-// /delete-node/ &xbl_mem;
+/delete-node/ &xbl_mem;
 
 / {
 	model = "Samsung Galaxy Book2 Go";
@@ -53,93 +53,93 @@
 		};
 	};
 
-	pmic-glink {
-		compatible = "qcom,qcm6490-pmic-glink", "qcom,pmic-glink";
+	// pmic-glink {
+	// 	compatible = "qcom,qcm6490-pmic-glink", "qcom,pmic-glink";
 
-		#address-cells = <1>;
-		#size-cells = <0>;
-		orientation-gpios = <&tlmm 140 GPIO_ACTIVE_HIGH>;
+	// 	#address-cells = <1>;
+	// 	#size-cells = <0>;
+	// 	orientation-gpios = <&tlmm 140 GPIO_ACTIVE_HIGH>;
 
-		connector@0 {
-			compatible = "usb-c-connector";
-			reg = <0>;
+	// 	connector@0 {
+	// 		compatible = "usb-c-connector";
+	// 		reg = <0>;
 
-			label = "Type C Left";
-			power-role = "dual";
-			data-role = "dual";
+	// 		label = "Type C Left";
+	// 		power-role = "dual";
+	// 		data-role = "dual";
 
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
+	// 		ports {
+	// 			#address-cells = <1>;
+	// 			#size-cells = <0>;
 
-				port@0 {
-					reg = <0>;
+	// 			port@0 {
+	// 				reg = <0>;
 
-					pmic_glink_c1_hs_in: endpoint {
-						remote-endpoint = <&hub_usb_c1_con_hs>;
-					};
-				};
-			};
-		};
+	// 				pmic_glink_c1_hs_in: endpoint {
+	// 					remote-endpoint = <&hub_usb_c1_con_hs>;
+	// 				};
+	// 			};
+	// 		};
+	// 	};
 
-		connector@1 {
-			compatible = "usb-c-connector";
-			reg = <0>;
+	// 	connector@1 {
+	// 		compatible = "usb-c-connector";
+	// 		reg = <0>;
 
-			label = "Type C Right";
-			power-role = "dual";
-			data-role = "dual";
+	// 		label = "Type C Right";
+	// 		power-role = "dual";
+	// 		data-role = "dual";
 
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
+	// 		ports {
+	// 			#address-cells = <1>;
+	// 			#size-cells = <0>;
 
-				port@0 {
-					reg = <0>;
+	// 			port@0 {
+	// 				reg = <0>;
 
-					pmic_glink_c2_hs_in: endpoint {
-						remote-endpoint = <&hub_usb_c2_con_hs>;
-					};
-				};
+	// 				pmic_glink_c2_hs_in: endpoint {
+	// 					remote-endpoint = <&hub_usb_c2_con_hs>;
+	// 				};
+	// 			};
 
-				port@1 {
-					reg = <1>;
+	// 			port@1 {
+	// 				reg = <1>;
 
-					pmic_glink_c2_ss_in: endpoint {
-						remote-endpoint = <&usb_dp_qmpphy_out>;
-					};
-				};
+	// 				pmic_glink_c2_ss_in: endpoint {
+	// 					remote-endpoint = <&usb_dp_qmpphy_out>;
+	// 				};
+	// 			};
 
-				// port@2 {
-				// 	reg = <2>;
+	// 			// port@2 {
+	// 			// 	reg = <2>;
 
-				// 	pmic_glink_c2_sbu_in: endpoint {
-				// 		remote-endpoint = <&redriver_usb_con_sbu>;
-				// 	};
-				// };
-			};
-		};
+	// 			// 	pmic_glink_c2_sbu_in: endpoint {
+	// 			// 		remote-endpoint = <&redriver_usb_con_sbu>;
+	// 			// 	};
+	// 			// };
+	// 		};
+	// 	};
 
-		connector@2 {
-			compatible = "usb-a-connector";
-			reg = <2>;
-			power-role = "dual";
-			data-role = "dual";
+	// 	connector@2 {
+	// 		compatible = "usb-a-connector";
+	// 		reg = <2>;
+	// 		power-role = "dual";
+	// 		data-role = "dual";
 
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
+	// 		ports {
+	// 			#address-cells = <1>;
+	// 			#size-cells = <0>;
 
-				port@0 {
-					reg = <0>;
+	// 			port@0 {
+	// 				reg = <0>;
 
-					pmic_glink_a1_hs_in: endpoint {
-						remote-endpoint = <&hub_usb_a1_con_hs>;
-					};
-				};
-			};
-		};
-	};
+	// 				pmic_glink_a1_hs_in: endpoint {
+	// 					remote-endpoint = <&hub_usb_a1_con_hs>;
+	// 				};
+	// 			};
+	// 		};
+	// 	};
+	// };
 };
 
 &i2c0 {
@@ -149,9 +149,9 @@
 	touchpad@40	{
 		compatible = "hid-over-i2c";
 		reg = <0x40>;
-		hid-descr-addr = <0x1>;
+		hid-descr-addr = <0x0E>;
 
-		interrupts-extended = <&tlmm 61 IRQ_TYPE_LEVEL_LOW>;
+		interrupts-extended = <&tlmm 51 IRQ_TYPE_LEVEL_LOW>;
 
 		pinctrl-0 = <&hid_touchpad_default>;
 		pinctrl-names = "default";
@@ -167,7 +167,7 @@
 	keyboard@5	{
 		compatible = "hid-over-i2c";
 		reg = <0x5>;
-		hid-descr-addr = <0x1>;
+		hid-descr-addr = <0x20>;
 
 		interrupts-extended = <&tlmm 131 IRQ_TYPE_LEVEL_LOW>;
 
@@ -274,8 +274,34 @@
 	status = "disabled";
 };
 
+&gcc {
+	protected-clocks = <GCC_CFG_NOC_LPASS_CLK>,
+			   <GCC_EDP_CLKREF_EN>,
+			   <GCC_MSS_CFG_AHB_CLK>,
+			   <GCC_MSS_GPLL0_MAIN_DIV_CLK_SRC>,
+			   <GCC_MSS_OFFLINE_AXI_CLK>,
+			   <GCC_MSS_Q6SS_BOOT_CLK_SRC>,
+			   <GCC_MSS_Q6_MEMNOC_AXI_CLK>,
+			   <GCC_MSS_SNOC_AXI_CLK>,
+			   <GCC_QSPI_CNOC_PERIPH_AHB_CLK>,
+			   <GCC_QSPI_CORE_CLK>,
+			   <GCC_QSPI_CORE_CLK_SRC>,
+			   <GCC_SEC_CTRL_CLK_SRC>,
+			   <GCC_WPSS_AHB_BDG_MST_CLK>,
+			   <GCC_WPSS_AHB_CLK>,
+			   <GCC_WPSS_RSCP_CLK>;
+};
+
 &gpu {
 	status = "disabled";
+};
+
+&qupv3_id_0 {
+	status = "okay";
+};
+
+&qupv3_id_1 {
+	status = "okay";
 };
 
 &tlmm {
@@ -300,53 +326,53 @@
 	};
 };
 
-&remoteproc_adsp {
-	firmware-name = "qcom/qcs6490/adsp.mbn";
-	status = "okay";
-};
+// &remoteproc_adsp {
+// 	firmware-name = "qcom/qcs6490/adsp.mbn";
+// 	status = "okay";
+// };
 
-&remoteproc_cdsp {
-	firmware-name = "qcom/qcs6490/cdsp.mbn";
-	status = "okay";
-};
+// &remoteproc_cdsp {
+// 	firmware-name = "qcom/qcs6490/cdsp.mbn";
+// 	status = "okay";
+// };
 
-&remoteproc_mpss {
-	firmware-name = "qcom/qcs6490/modem.mbn";
-	status = "okay";
-};
+// &remoteproc_mpss {
+// 	firmware-name = "qcom/qcs6490/modem.mbn";
+// 	status = "okay";
+// };
 
-&remoteproc_wpss {
-	firmware-name = "qcom/qcs6490/wpss.mbn";
-	status = "okay";
-};
+// &remoteproc_wpss {
+// 	firmware-name = "qcom/qcs6490/wpss.mbn";
+// 	status = "okay";
+// };
 
-&ufs_mem_hc {
-	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
-	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
+// &ufs_mem_hc {
+// 	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
+// 	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
 
-	// Yoinked from fp5, dsdt lists pmicvregvotes for both of these, no amperages in dsdt though
-	vcc-supply = <&vreg_l7b_2p9>;
-	vcc-max-microamp = <800000>;
-	/*
-	 * Technically l9b enables an eLDO (supplied by s1b) which then powers
-	 * VCCQ2 of the UFS.
-	 */
-	vccq-supply = <&vreg_l9b_1p2>;
-	vccq-max-microamp = <900000>;
+// 	// Yoinked from fp5, dsdt lists pmicvregvotes for both of these, no amperages in dsdt though
+// 	vcc-supply = <&vreg_l7b_2p9>;
+// 	vcc-max-microamp = <800000>;
+// 	/*
+// 	 * Technically l9b enables an eLDO (supplied by s1b) which then powers
+// 	 * VCCQ2 of the UFS.
+// 	 */
+// 	vccq-supply = <&vreg_l9b_1p2>;
+// 	vccq-max-microamp = <900000>;
 
-	status = "okay";
-};
+// 	status = "okay";
+// };
 
-&ufs_mem_phy {
-	/*
-	 * FP5 dts has stuff here about regulators/supplies, no idea which ones I should use on this board
-	 * Also no device in dsdt on 1D87000.
-	 */
-	vdda-phy-supply = <&vreg_l10c_0p8>;
-	vdda-pll-supply = <&vreg_l6b_1p2>;
+// &ufs_mem_phy {
+// 	/*
+// 	 * FP5 dts has stuff here about regulators/supplies, no idea which ones I should use on this board
+// 	 * Also no device in dsdt on 1D87000.
+// 	 */
+// 	vdda-phy-supply = <&vreg_l10c_0p8>;
+// 	vdda-pll-supply = <&vreg_l6b_1p2>;
 
-	status = "okay";
-};
+// 	status = "okay";
+// };
 
 &usb_1 {
 	status = "okay";
@@ -359,65 +385,65 @@
 	#size-cells = <0>;
 
 	/* 2.x hub on port 1 */
-	usb_hub_2_x: hub@1 {
-		compatible = "usb424,2514";
-		reg = <1>;
+	// usb_hub_2_x: hub@1 {
+	// 	compatible = "usb424,2514";
+	// 	reg = <1>;
 
-		#address-cells = <1>;
-		#size-cells = <0>;
+	// 	#address-cells = <1>;
+	// 	#size-cells = <0>;
 		
-		ports {
-			#address-cells = <1>;
-			#size-cells = <0>;
+	// 	ports {
+	// 		#address-cells = <1>;
+	// 		#size-cells = <0>;
 
-			port@1 {
-				reg = <1>;
+	// 		port@1 {
+	// 			reg = <1>;
 
-				hub_usb_c1_con_hs: endpoint {
-					remote-endpoint = <&pmic_glink_c1_hs_in>;
-				};
-			};
+	// 			hub_usb_c1_con_hs: endpoint {
+	// 				remote-endpoint = <&pmic_glink_c1_hs_in>;
+	// 			};
+	// 		};
 
-			port@2 {
-				reg = <2>;
+	// 		port@2 {
+	// 			reg = <2>;
 
-				hub_usb_c2_con_hs: endpoint {
-					remote-endpoint = <&pmic_glink_c2_hs_in>;
-				};
-			};
+	// 			hub_usb_c2_con_hs: endpoint {
+	// 				remote-endpoint = <&pmic_glink_c2_hs_in>;
+	// 			};
+	// 		};
 
-			port@3 {
-				reg = <3>;
+	// 		port@3 {
+	// 			reg = <3>;
 
-				hub_usb_a1_con_hs: endpoint {
-					remote-endpoint = <&pmic_glink_a1_hs_in>;
-				};
-			};
-		};
+	// 			hub_usb_a1_con_hs: endpoint {
+	// 				remote-endpoint = <&pmic_glink_a1_hs_in>;
+	// 			};
+	// 		};
+	// 	};
 
-		webcam@4 {
-			compatible = "usb4f2,b72f";
-			reg = <4>;
-		};
-	};
+	// 	webcam@4 {
+	// 		compatible = "usb4f2,b72f";
+	// 		reg = <4>;
+	// 	};
+	// };
 
 };
 
 &usb_1_hsphy {
 	status = "okay";
 
-	qcom,hs-rise-fall-time-bp = <0>;
-	qcom,squelch-detector-bp = <(-2090)>;
-	qcom,hs-disconnect-bp = <1743>;
-	qcom,hs-amplitude-bp = <1780>;
-	qcom,hs-crossover-voltage-microvolt = <(-31000)>;
-	qcom,hs-output-impedance-micro-ohms = <2600000>;
+	// qcom,hs-rise-fall-time-bp = <0>;
+	// qcom,squelch-detector-bp = <(-2090)>;
+	// qcom,hs-disconnect-bp = <1743>;
+	// qcom,hs-amplitude-bp = <1780>;
+	// qcom,hs-crossover-voltage-microvolt = <(-31000)>;
+	// qcom,hs-output-impedance-micro-ohms = <2600000>;
 };
 
 &usb_1_qmpphy {
 	status = "okay";
 };
 
-&usb_dp_qmpphy_out {
-	remote-endpoint = <&pmic_glink_c2_ss_in>;
-};
+// &usb_dp_qmpphy_out {
+// 	remote-endpoint = <&pmic_glink_c2_ss_in>;
+// };
