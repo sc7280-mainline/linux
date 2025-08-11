@@ -53,13 +53,20 @@
 	gpio-keys {
 		compatible = "gpio-keys";
 
-		pinctrl-0 = <&volume_down_default>;
+		pinctrl-0 = <&volume_down_default>, <&gpio_custom_key_default>;
 		pinctrl-names = "default";
 
 		key-volume-up {
 			label = "Volume up";
 			gpios = <&pm7325_gpios 6 GPIO_ACTIVE_LOW>;
 			linux,code = <KEY_VOLUMEUP>;
+			debounce-interval = <15>;
+		};
+
+		key-custom {
+			label = "Custom Key";
+			gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
+			linux,code = <BTN_MISC>;
 			debounce-interval = <15>;
 		};
 	};
@@ -912,6 +919,13 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
+	};
+
+	gpio_custom_key_default: gpio-custom-key-default-state {
+		pins = "gpio75";
+		function = "gpio";
+		drive_strength = <2>;
+		bias-pull-up;
 	};
 
 	mdp_vsync: mdp-vsync-state {
