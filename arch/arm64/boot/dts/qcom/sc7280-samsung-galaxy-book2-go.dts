@@ -346,33 +346,33 @@
 // 	status = "okay";
 // };
 
-// &ufs_mem_hc {
-// 	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
-// 	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
+&ufs_mem_hc {
+	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
+	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
 
-// 	// Yoinked from fp5, dsdt lists pmicvregvotes for both of these, no amperages in dsdt though
-// 	vcc-supply = <&vreg_l7b_2p9>;
-// 	vcc-max-microamp = <800000>;
-// 	/*
-// 	 * Technically l9b enables an eLDO (supplied by s1b) which then powers
-// 	 * VCCQ2 of the UFS.
-// 	 */
-// 	vccq-supply = <&vreg_l9b_1p2>;
-// 	vccq-max-microamp = <900000>;
+	// Yoinked from fp5, dsdt lists pmicvregvotes for both of these, no amperages in dsdt though
+	vcc-supply = <&vreg_l7b_2p9>;
+	vcc-max-microamp = <800000>;
+	/*
+	 * Technically l9b enables an eLDO (supplied by s1b) which then powers
+	 * VCCQ2 of the UFS.
+	 */
+	vccq-supply = <&vreg_l9b_1p2>;
+	vccq-max-microamp = <900000>;
 
-// 	status = "okay";
-// };
+	status = "okay";
+};
 
-// &ufs_mem_phy {
-// 	/*
-// 	 * FP5 dts has stuff here about regulators/supplies, no idea which ones I should use on this board
-// 	 * Also no device in dsdt on 1D87000.
-// 	 */
-// 	vdda-phy-supply = <&vreg_l10c_0p8>;
-// 	vdda-pll-supply = <&vreg_l6b_1p2>;
+&ufs_mem_phy {
+	/*
+	 * FP5 dts has stuff here about regulators/supplies, no idea which ones I should use on this board
+	 * Also no device in dsdt on 1D87000.
+	 */
+	vdda-phy-supply = <&vreg_l10c_0p8>;
+	vdda-pll-supply = <&vreg_l6b_1p2>;
 
-// 	status = "okay";
-// };
+	status = "okay";
+};
 
 &usb_1 {
 	status = "okay";
