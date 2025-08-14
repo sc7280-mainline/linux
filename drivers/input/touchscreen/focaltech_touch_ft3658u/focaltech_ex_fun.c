@@ -317,6 +317,7 @@ static ssize_t fts_hw_reset_store(
 	return -EPERM;
 }
 
+#if 0
 /* fts_irq interface */
 static ssize_t fts_irq_show(
 	struct device *dev, struct device_attribute *attr, char *buf)
@@ -346,6 +347,7 @@ static ssize_t fts_irq_store(
 	mutex_unlock(&input_dev->mutex);
 	return count;
 }
+#endif
 
 /* fts_boot_mode interface */
 static ssize_t fts_bootmode_store(
@@ -842,7 +844,9 @@ static DEVICE_ATTR(fts_rw_reg, S_IRUGO | S_IWUSR, fts_tprwreg_show, fts_tprwreg_
 static DEVICE_ATTR(fts_driver_info, S_IRUGO | S_IWUSR, fts_driverinfo_show, fts_driverinfo_store);
 static DEVICE_ATTR(fts_dump_reg, S_IRUGO | S_IWUSR, fts_dumpreg_show, fts_dumpreg_store);
 static DEVICE_ATTR(fts_hw_reset, S_IRUGO | S_IWUSR, fts_hw_reset_show, fts_hw_reset_store);
+#if 0
 static DEVICE_ATTR(fts_irq, S_IRUGO | S_IWUSR, fts_irq_show, fts_irq_store);
+#endif
 static DEVICE_ATTR(fts_boot_mode, S_IRUGO | S_IWUSR, fts_bootmode_show, fts_bootmode_store);
 static DEVICE_ATTR(fts_touch_point, S_IRUGO | S_IWUSR, fts_tpbuf_show, fts_tpbuf_store);
 static DEVICE_ATTR(fts_log_level, S_IRUGO | S_IWUSR, fts_log_level_show, fts_log_level_store);
@@ -854,7 +858,9 @@ static struct attribute *fts_attributes[] = {
 	&dev_attr_fts_dump_reg.attr,
 	&dev_attr_fts_driver_info.attr,
 	&dev_attr_fts_hw_reset.attr,
+#if 0
 	&dev_attr_fts_irq.attr,
+#endif
 	&dev_attr_fts_boot_mode.attr,
 	&dev_attr_fts_touch_point.attr,
 	&dev_attr_fts_log_level.attr,
