@@ -132,7 +132,7 @@
 
 		rmtfs_mem: rmtfs@f8500000 {
 			compatible = "qcom,rmtfs-mem";
-			reg = <0x0 0xf8500000 0x0 0x600000>;
+			reg = <0x0 0xf8500000 0x0 0x280000>;
 			no-map;
 
 			qcom,client-id = <1>;
