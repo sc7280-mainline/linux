@@ -1,5 +1,4 @@
 /*
- *
  * FocalTech TouchScreen driver.
  *
  * Copyright (c) 2012-2020, FocalTech Systems, Ltd., all rights reserved.
@@ -12,10 +11,10 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
  */
 
-#include "focaltech_core.h"
+#include <linux/regmap.h>
+#include "focaltech.h"
 
 #define SPI_RETRY_NUMBER	3
 #define CS_HIGH_DELAY		150 /* unit: us */
@@ -166,9 +165,9 @@ int fts_write(u8 *writebuf, u32 writelen)
 
 	for (i = 0; i < SPI_RETRY_NUMBER; i++) {
 		ret = fts_spi_transfer(txbuf, rxbuf, txlen);
-		if ((0 == ret) && ((rxbuf[3] & 0xA0) == 0)) {
+		if ((0 == ret) && ((rxbuf[3] & 0xA0) == 0))
 			break;
-		} else {
+		else {
 			dev_dbg(fts_data->dev,
 				"data write(addr:%x),status:%x,retry:%d,ret:%d",
 				writebuf[0], rxbuf[3], i, ret);
@@ -254,9 +253,8 @@ int fts_read(u8 *cmd, u32 cmdlen, u8 *data, u32 datalen)
 	txbuf[txlen++] = datalen & 0xFF;
 	dp = txlen + SPI_DUMMY_BYTE;
 	txlen = dp + datalen;
-	if (ctrl & DATA_CRC_EN) {
+	if (ctrl & DATA_CRC_EN)
 		txlen = txlen + 2;
-	}
 
 	for (i = 0; i < SPI_RETRY_NUMBER; i++) {
 		ret = fts_spi_transfer(txbuf, rxbuf, txlen);

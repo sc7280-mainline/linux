@@ -13,66 +13,204 @@
  * GNU General Public License for more details.
  */
 
-#include "focaltech_core.h"
-#include "focaltech_flash.h"
+#include "focaltech.h"
 
-#define FTS_FW_REQUEST_SUPPORT		0
-/* Example: focaltech_ts_fw_tianma.bin */
-#define FTS_FW_NAME_PREX_WITH_REQUEST	"focaltech_ts_fw_"
+#define FTS_CMD_RESET				0x07
+#define FTS_ROMBOOT_CMD_SET_PRAM_ADDR		0xAD
+#define FTS_ROMBOOT_CMD_SET_PRAM_ADDR_LEN	4
+#define FTS_ROMBOOT_CMD_WRITE			0xAE
+#define FTS_ROMBOOT_CMD_START_APP		0x08
+#define FTS_DELAY_PRAMBOOT_START		100
+#define FTS_ROMBOOT_CMD_ECC			0xCC
+#define FTS_PRAM_SADDR				0x000000
+#define FTS_DRAM_SADDR				0xD00000
+
+#define FTS_CMD_READ_FWCFG			0xA8
+
+#define FTS_CMD_READ				0x03
+#define FTS_CMD_READ_DELAY			1
+#define FTS_CMD_READ_LEN			4
+#define FTS_CMD_READ_LEN_SPI			6
+#define FTS_CMD_FLASH_TYPE			0x05
+#define FTS_CMD_FLASH_MODE			0x09
+#define FLASH_MODE_WRITE_FLASH_VALUE		0x0A
+#define FLASH_MODE_UPGRADE_VALUE		0x0B
+#define FLASH_MODE_LIC_VALUE			0x0C
+#define FLASH_MODE_PARAM_VALUE			0x0D
+#define FTS_CMD_ERASE_APP			0x61
+#define FTS_REASE_APP_DELAY			1350
+#define FTS_ERASE_SECTOR_DELAY			60
+#define FTS_RETRIES_REASE			50
+#define FTS_RETRIES_DELAY_REASE			400
+#define FTS_CMD_FLASH_STATUS			0x6A
+#define FTS_CMD_FLASH_STATUS_LEN		2
+#define FTS_CMD_FLASH_STATUS_NOP		0x0000
+#define FTS_CMD_FLASH_STATUS_ECC_OK		0xF055
+#define FTS_CMD_FLASH_STATUS_ERASE_OK		0xF0AA
+#define FTS_CMD_FLASH_STATUS_WRITE_OK		0x1000
+#define FTS_CMD_ECC_INIT			0x64
+#define FTS_CMD_ECC_CAL				0x65
+#define FTS_CMD_ECC_CAL_LEN			7
+#define FTS_RETRIES_ECC_CAL			10
+#define FTS_RETRIES_DELAY_ECC_CAL		50
+#define FTS_CMD_ECC_READ			0x66
+#define FTS_CMD_DATA_LEN			0xB0
+#define FTS_CMD_APP_DATA_LEN_INCELL		0x7A
+#define FTS_CMD_DATA_LEN_LEN			4
+#define FTS_CMD_SET_WFLASH_ADDR			0xAB
+#define FTS_CMD_SET_RFLASH_ADDR			0xAC
+#define FTS_LEN_SET_ADDR			4
+#define FTS_CMD_WRITE				0xBF
+#define FTS_RETRIES_WRITE			100
+#define FTS_RETRIES_DELAY_WRITE			1
+#define FTS_CMD_WRITE_LEN			6
+#define FTS_DELAY_READ_ID			20
+#define FTS_DELAY_UPGRADE_RESET			80
+#define PRAMBOOT_MIN_SIZE			0x120
+#define PRAMBOOT_MAX_SIZE			(64 * 1024)
+#define FTS_FLASH_PACKET_LENGTH			32 /* max=128 */
+#define FTS_MAX_LEN_ECC_CALC			0xFFFE /* must be even */
+#define FTS_MIN_LEN				0x120
+#define FTS_MAX_LEN_FILE			(256 * 1024)
+#define FTS_MAX_LEN_APP				(64 * 1024)
+#define FTS_MAX_LEN_SECTOR			(4 * 1024)
+#define FTS_CONIFG_VENDORID_OFF			0x04
+#define FTS_CONIFG_MODULEID_OFF			0x1E
+#define FTS_CONIFG_PROJECTID_OFF		0x20
+#define FTS_APPINFO_OFF				0x100
+#define FTS_APPINFO_APPLEN_OFF			0x00
+#define FTS_APPINFO_APPLEN2_OFF			0x12
+#define FTS_REG_UPGRADE				0xFC
+#define FTS_REG_UPGRADE2			0xBC
+#define FTS_UPGRADE_AA				0xAA
+#define FTS_UPGRADE_55				0x55
+#define FTS_DELAY_UPGRADE_AA			10
+#define FTS_UPGRADE_LOOP			30
+#define FTS_HEADER_LEN				32
+#define FTS_FW_BIN_FILEPATH			"/sdcard/"
+#define FTS_FW_IDE_SIG				"IDE_"
+#define FTS_FW_IDE_SIG_LEN			4
+#define MAX_MODULE_VENDOR_NAME_LEN		16
+
+#define FTS_ROMBOOT_CMD_ECC_NEW_LEN		7
+#define FTS_ECC_FINISH_TIMEOUT			100
+#define FTS_ROMBOOT_CMD_ECC_FINISH		0xCE
+#define FTS_ROMBOOT_CMD_ECC_FINISH_OK_A5	0xA5
+#define FTS_ROMBOOT_CMD_ECC_FINISH_OK_00	0x00
+#define FTS_ROMBOOT_CMD_ECC_READ		0xCD
+#define AL2_FCS_COEF				((1 << 15) + (1 << 10) + (1 << 3))
+
+#define FTS_APP_INFO_OFFSET			0x100
+
+enum FW_STATUS {
+	FTS_RUN_IN_ERROR,
+	FTS_RUN_IN_APP,
+	FTS_RUN_IN_ROM,
+	FTS_RUN_IN_PRAM,
+	FTS_RUN_IN_BOOTLOADER,
+};
+
+enum FW_FLASH_MODE {
+	FLASH_MODE_APP,
+	FLASH_MODE_LIC,
+	FLASH_MODE_PARAM,
+	FLASH_MODE_ALL,
+};
+
+enum ECC_CHECK_MODE {
+	ECC_CHECK_MODE_XOR,
+	ECC_CHECK_MODE_CRC16,
+};
+
+enum UPGRADE_SPEC {
+	UPGRADE_SPEC_V_1_0 = 0x0100,
+	UPGRADE_SPEC_V_1_1 = 0x0101,
+	UPGRADE_SPEC_V_1_2 = 0x0102,
+};
+
+struct upgrade_func {
+	u16 ctype[FTS_MAX_COMPATIBLE_TYPE];
+	u32 fwveroff;
+	u32 fwcfgoff;
+	u32 appoff;
+	u32 licoff;
+	u32 paramcfgoff;
+	u32 paramcfgveroff;
+	u32 paramcfg2off;
+	int pram_ecc_check_mode;
+	int fw_ecc_check_mode;
+	int upgspec_version;
+	bool new_return_value_from_ic;
+	bool appoff_handle_in_ic;
+	bool is_reset_register_BC;
+	bool read_boot_id_need_reset;
+	bool hid_supported;
+	bool pramboot_supported;
+	u8 *pramboot;
+	u32 pb_length;
+	int (*init)(u8 *, u32);
+	int (*write_pramboot_private)(void);
+	int (*upgrade)(u8 *, u32);
+	int (*get_hlic_ver)(u8 *);
+	int (*lic_upgrade)(u8 *, u32);
+	int (*param_upgrade)(u8 *, u32);
+	int (*force_upgrade)(u8 *, u32);
+};
+
+struct upgrade_setting_nf {
+	u8 rom_idh;
+	u8 rom_idl;
+	u16 reserved;
+	u32 app2_offset;
+	u32 ecclen_max;
+	u8 eccok_val;
+	u8 upgsts_boot;
+	u8 delay_init;
+	u8 spi_pe;
+	u8 length_coefficient;
+	u8 fd_check;
+	u8 drwr_support;
+	u8 ecc_delay;
+};
+
+struct upgrade_module {
+	int id;
+	char vendor_name[MAX_MODULE_VENDOR_NAME_LEN];
+	u8 *fw_file;
+	u32 fw_len;
+};
+
+struct fts_upgrade {
+	struct fts_ts_data *ts_data;
+	struct upgrade_module *module_info;
+	struct upgrade_func *func;
+	struct upgrade_setting_nf *setting_nf;
+	int module_id;
+	bool fw_from_request;
+	u8 *fw;
+	u32 fw_length;
+	u8 *lic;
+	u32 lic_length;
+};
+
 #define FTS_READ_BOOT_ID_TIMEOUT	3
 #define FTS_FLASH_PACKET_LENGTH_SPI_LOW	(4 * 1024 - 4)
 #define FTS_FLASH_PACKET_LENGTH_SPI	(32 * 1024 - 16)
 
-/*extern ssize_t kernel_read(struct file *, void *, size_t , loff_t *);*/
-
-/*****************************************************************************
-* Private enumerations, structures and unions using typedef
-*****************************************************************************/
-
-/*****************************************************************************
-* Global variable or extern global variabls/functions
-*****************************************************************************/
-u8 fw_file[] = {
-#include FTS_UPGRADE_FW_FILE
-};
-
-u8 fw_file2[] = {
-#include FTS_UPGRADE_FW2_FILE
-};
-
-u8 fw_file3[] = {
-#include FTS_UPGRADE_FW3_FILE
-};
-
-struct upgrade_module module_list[] = {
-	{ FTS_MODULE_ID, FTS_MODULE_NAME, fw_file, sizeof(fw_file) },
-	{ FTS_MODULE2_ID, FTS_MODULE2_NAME, fw_file2, sizeof(fw_file2) },
-	{ FTS_MODULE3_ID, FTS_MODULE3_NAME, fw_file3, sizeof(fw_file3) },
-};
 
 struct upgrade_setting_nf upgrade_setting_list[] = {
-	{ 0x87, 0x19, 0, (64 * 1024), (128 * 1024), 0x00, 0x02, 8, 1, 1, 1, 0,
-	  0 },
-	{ 0x86, 0x22, 0, (64 * 1024), (128 * 1024), 0x00, 0x02, 8, 1, 1, 0, 0,
-	  0 },
+	{ 0x87, 0x19, 0, (64 * 1024), (128 * 1024), 0x00, 0x02, 8, 1, 1, 1, 0, 0 },
+	{ 0x86, 0x22, 0, (64 * 1024), (128 * 1024), 0x00, 0x02, 8, 1, 1, 0, 0, 0 },
 	{ 0x87, 0x56, 0, (88 * 1024), 32766, 0xA5, 0x01, 8, 0, 2, 0, 1, 0 },
 	{ 0x80, 0x09, 0, (88 * 1024), 32766, 0xA5, 0x01, 8, 0, 2, 0, 1, 0 },
-	{ 0x86, 0x32, 0, (64 * 1024), (128 * 1024), 0xA5, 0x01, 12, 0, 1, 0, 0,
-	  0 },
-	{ 0x86, 0x42, 0, (64 * 1024), (128 * 1024), 0xA5, 0x01, 12, 0, 1, 0, 0,
-	  0 },
-	{ 0x87, 0x20, 0, (88 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 2, 0, 1,
-	  0 },
-	{ 0x87, 0x22, 0, (88 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 2, 0, 1,
-	  0 },
-	{ 0x82, 0x01, 0, (96 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 2, 0, 0,
-	  0 },
-	{ 0xF0, 0xC6, 0, (84 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 2, 0, 1,
-	  0 },
-	{ 0x56, 0x62, 0, (128 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 4, 0, 0,
-	  5 },
-	{ 0x82, 0x05, 0, (120 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 2, 0, 0,
-	  0 },
+	{ 0x86, 0x32, 0, (64 * 1024), (128 * 1024), 0xA5, 0x01, 12, 0, 1, 0, 0, 0 },
+	{ 0x86, 0x42, 0, (64 * 1024), (128 * 1024), 0xA5, 0x01, 12, 0, 1, 0, 0, 0 },
+	{ 0x87, 0x20, 0, (88 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 2, 0, 1, 0 },
+	{ 0x87, 0x22, 0, (88 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 2, 0, 1, 0 },
+	{ 0x82, 0x01, 0, (96 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 2, 0, 0, 0 },
+	{ 0xF0, 0xC6, 0, (84 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 2, 0, 1, 0 },
+	{ 0x56, 0x62, 0, (128 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 4, 0, 0, 5 },
+	{ 0x82, 0x05, 0, (120 * 1024), (128 * 1024), 0xA5, 0x01, 8, 0, 2, 0, 0, 0 },
 };
 
 struct fts_upgrade *fwupgrade;
@@ -101,17 +239,10 @@ static int fts_check_bootid(void)
 	}
 
 	dev_info(fts_data->dev, "read boot id:0x%02x 0x%02x", id[0], id[1]);
-	if ((chip_id->rom_idh == id[0]) && (chip_id->rom_idl == id[1])) {
+	if ((chip_id->rom_idh == id[0]) && (chip_id->rom_idl == id[1]))
 		return 0;
-	}
 
 	return -EIO;
-}
-
-static int fts_fwupg_hardware_reset_to_boot(void)
-{
-	fts_request_handle_reset(fts_data, 0);
-	return 0;
 }
 
 static int fts_enter_into_boot(void)
@@ -130,7 +261,7 @@ static int fts_enter_into_boot(void)
 	dev_info(fts_data->dev, "enter into boot environment");
 	for (i = 0; i < FTS_UPGRADE_LOOP; i++) {
 		/* hardware tp reset to boot */
-		fts_fwupg_hardware_reset_to_boot();
+		fts_request_handle_reset(fts_data, 0);
 		mdelay(upg->setting_nf->delay_init + i);
 
 		/* enter into boot & check boot id*/
@@ -250,9 +381,8 @@ static int fts_dpram_write_pe(u32 saddr, const u8 *buf, u32 len, bool wpram)
 		cmd[4] = BYTE_OFF_8(packet_len);
 		cmd[5] = BYTE_OFF_0(packet_len);
 
-		for (j = 0; j < packet_len; j++) {
+		for (j = 0; j < packet_len; j++)
 			cmd[FTS_CMD_WRITE_LEN + j] = buf[offset + j];
-		}
 
 		ret = fts_write(&cmd[0], FTS_CMD_WRITE_LEN + packet_len);
 		if (ret < 0) {
@@ -463,9 +593,8 @@ static int fts_ecc_check(const u8 *buf, u32 len, u32 ecc_saddr)
 		return -EINVAL;
 	}
 
-	if (upg->setting_nf->ecclen_max) {
+	if (upg->setting_nf->ecclen_max)
 		packet_size = upg->setting_nf->ecclen_max;
-	}
 
 	packet_number = len / packet_size;
 	packet_remainder = len % packet_size;
@@ -728,204 +857,11 @@ err_fw_download:
 	return ret;
 }
 
-/*
-static int fts_read_file_default(char *file_name, u8 **file_buf)
-{
-    int ret = 0;
-    char file_path[FILE_NAME_LENGTH] = { 0 };
-    struct file *filp = NULL;
-    struct inode *inode;
-    loff_t pos;
-    loff_t file_len = 0;
-
-    if ((NULL == file_name) || (NULL == file_buf)) {
-        dev_err(fts_data->dev, "filename/filebuf is NULL");
-        return -EINVAL;
-    }
-
-    snprintf(file_path, FILE_NAME_LENGTH, "%s%s", FTS_FW_BIN_FILEPATH, file_name);
-    filp = filp_open(file_path, O_RDONLY, 0);
-    if (IS_ERR(filp)) {
-        dev_err(fts_data->dev, "open %s file fail", file_path);
-        return -ENOENT;
-    }
-
-#if 1
-    inode = filp->f_inode;
-#else
-    inode = filp->f_dentry->d_inode;
-#endif
-
-    file_len = inode->i_size;
-    *file_buf = (u8 *)vmalloc(file_len);
-    if (NULL == *file_buf) {
-        dev_err(fts_data->dev, "file buf malloc fail");
-        filp_close(filp, NULL);
-        return -ENOMEM;
-    }
-
-    pos = 0;
-    ret = kernel_read(filp,*file_buf,file_len,&pos);
-    if (ret < 0)
-        dev_err(fts_data->dev, "read file fail");
-    dev_info(fts_data->dev, "file len:%d read len:%d pos:%d", (u32)file_len, ret, (u32)pos);
-    filp_close(filp, NULL);
-
-    return ret;
-}
-*/
-
-static int fts_read_file_request_firmware(char *file_name, u8 **file_buf)
-{
-	int ret = 0;
-	const struct firmware *fw = NULL;
-	char fwname[FILE_NAME_LENGTH] = { 0 };
-	struct fts_upgrade *upg = fwupgrade;
-
-#if !FTS_FW_REQUEST_SUPPORT
-	return -EINVAL;
-#endif
-
-	snprintf(fwname, FILE_NAME_LENGTH, "%s", file_name);
-	ret = request_firmware(&fw, fwname, upg->ts_data->dev);
-	if (0 == ret) {
-		dev_info(fts_data->dev, "firmware(%s) request successfully",
-			 fwname);
-		*file_buf = vmalloc(fw->size);
-		if (NULL == *file_buf) {
-			dev_err(fts_data->dev, "fw buffer vmalloc fail");
-			ret = -ENOMEM;
-		} else {
-			memcpy(*file_buf, fw->data, fw->size);
-			ret = fw->size;
-		}
-	} else {
-		dev_info(fts_data->dev, "firmware(%s) request fail,ret=%d",
-			 fwname, ret);
-		ret = -EIO;
-	}
-
-	if (fw != NULL) {
-		release_firmware(fw);
-		fw = NULL;
-	}
-
-	return ret;
-}
-
-static int fts_read_file(char *file_name, u8 **file_buf)
-{
-	int ret = 0;
-
-	ret = fts_read_file_request_firmware(file_name, file_buf);
-	if (ret < 0) {
-		dev_err(fts_data->dev, "get fw file(default) fail");
-		return ret;
-	}
-
-	return ret;
-}
-
-int fts_upgrade_bin(char *fw_name, bool force)
-{
-	int ret = 0;
-	u32 fw_file_len = 0;
-	u8 *fw_file_buf = NULL;
-	struct fts_upgrade *upg = fwupgrade;
-
-	dev_info(fts_data->dev, "start upgrade with fw bin");
-	if (!upg || !upg->ts_data || !upg->setting_nf) {
-		dev_err(fts_data->dev, "upgrade/ts_data/setting_nf is null");
-		return -EINVAL;
-	}
-
-	if (upg->ts_data->fw_loading) {
-		dev_info(fts_data->dev, "fw is loading, not download again");
-		return -EINVAL;
-	}
-
-	ret = fts_read_file(fw_name, &fw_file_buf);
-	if ((ret < 0) || (ret < FTS_MIN_LEN)) {
-		dev_err(fts_data->dev, "read fw bin file(%s) fail, len:%d",
-			fw_name, ret);
-		goto err_bin;
-	}
-
-	fw_file_len = ret;
-	dev_info(fts_data->dev, "fw bin file len:%d", fw_file_len);
-	ret = fts_fw_download(fw_file_buf, fw_file_len, true);
-	if (ret < 0) {
-		dev_err(fts_data->dev, "upgrade fw bin failed");
-		goto err_bin;
-	}
-
-	dev_info(fts_data->dev, "upgrade fw bin success");
-
-err_bin:
-	if (fw_file_buf) {
-		vfree(fw_file_buf);
-		fw_file_buf = NULL;
-	}
-	return ret;
-}
-
-int fts_enter_test_environment(bool test_state)
-{
-	int ret = 0;
-	int i = 0;
-	u8 detach_flag = 0;
-	u32 app_offset = 0;
-	struct fts_upgrade *upg = fwupgrade;
-
-	dev_info(fts_data->dev, "fw test download function");
-	if (!upg || !upg->ts_data || !upg->setting_nf) {
-		dev_err(fts_data->dev, "upgrade/ts_data/setting_nf is null");
-		return -EINVAL;
-	}
-
-	if (upg->ts_data->fw_loading) {
-		dev_info(fts_data->dev, "fw is loading, not download again");
-		return -EINVAL;
-	}
-
-	if (!upg->fw || (upg->fw_length <= upg->setting_nf->app2_offset)) {
-		dev_info(fts_data->dev, "not multi-app");
-		return 0;
-	}
-
-	if (test_state) {
-		app_offset = upg->setting_nf->app2_offset;
-	}
-
-	/*download firmware*/
-	upg->ts_data->fw_loading = 1;
-	for (i = 0; i < 3; i++) {
-		dev_info(fts_data->dev, "fw download times:%d", i + 1);
-		ret = fts_fw_write_start(upg->fw + app_offset, upg->fw_length,
-					 true);
-		if (0 == ret)
-			break;
-	}
-	upg->ts_data->fw_loading = 0;
-
-	if (i >= 3) {
-		dev_err(fts_data->dev, "fw(addr:%x) download fail", app_offset);
-		return -EIO;
-	}
-
-	msleep(50);
-	ret = fts_read_reg(FTS_REG_FACTORY_MODE_DETACH_FLAG, &detach_flag);
-	dev_info(fts_data->dev, "regb4:0x%02x", detach_flag);
-
-	return 0;
-}
-
 int fts_fw_resume(bool need_reset)
 {
 	int ret = 0;
 	struct fts_upgrade *upg = fwupgrade;
 	const struct firmware *fw = NULL;
-	char fwname[FILE_NAME_LENGTH] = { 0 };
 	bool get_fw_i_flag = true;
 	const u8 *fw_buf = NULL;
 	u32 fwlen = 0;
@@ -941,22 +877,17 @@ int fts_fw_resume(bool need_reset)
 		return -EINVAL;
 	}
 
-	if (FTS_FW_REQUEST_SUPPORT) {
-		snprintf(fwname, FILE_NAME_LENGTH, "%s%s.bin",
-			 FTS_FW_NAME_PREX_WITH_REQUEST,
-			 upg->module_info->vendor_name);
-		ret = request_firmware(&fw, fwname, upg->ts_data->dev);
-		if (ret == 0) {
-			dev_info(fts_data->dev,
-				 "firmware(%s) request successfully", fwname);
-			fw_buf = fw->data;
-			fwlen = fw->size;
-			get_fw_i_flag = false;
-		} else {
-			dev_err(fts_data->dev,
-				"%s:firmware(%s) request fail,ret=%d\n",
-				__func__, fwname, ret);
-		}
+	ret = request_firmware(&fw, fts_data->firmware_path, upg->ts_data->dev);
+	if (ret == 0) {
+		dev_info(fts_data->dev,
+			 "firmware(%s) request successfully", fts_data->firmware_path);
+		fw_buf = fw->data;
+		fwlen = fw->size;
+		get_fw_i_flag = false;
+	} else {
+		dev_err(fts_data->dev,
+			"%s:firmware(%s) request fail,ret=%d\n",
+			__func__, fts_data->firmware_path, ret);
 	}
 
 	if (get_fw_i_flag) {
@@ -970,11 +901,9 @@ int fts_fw_resume(bool need_reset)
 		dev_err(fts_data->dev, "fw resume download failed");
 	}
 
-	if (FTS_FW_REQUEST_SUPPORT) {
-		if (fw != NULL) {
-			release_firmware(fw);
-			fw = NULL;
-		}
+	if (fw != NULL) {
+		release_firmware(fw);
+		fw = NULL;
 	}
 
 	return ret;
@@ -1030,42 +959,10 @@ int fts_fw_recovery(void)
 	ret = fts_read_reg(FTS_REG_CHIP_ID, &chip_id);
 	dev_info(fts_data->dev, "read chip id:0x%02x", chip_id);
 
-	fts_tp_state_recovery(upg->ts_data);
+	fts_wait_tp_to_valid();
 
 	dev_info(fts_data->dev, "boot recovery pass");
 	return ret;
-}
-
-static int fts_fwupg_get_module_info(struct fts_upgrade *upg)
-{
-	int i = 0;
-	struct upgrade_module *info = &module_list[0];
-
-	if (!upg || !upg->ts_data) {
-		dev_err(fts_data->dev, "upg/ts_data is null");
-		return -EINVAL;
-	}
-
-	if (FTS_GET_MODULE_NUM > 1) {
-		dev_info(fts_data->dev, "module id:%04x", upg->module_id);
-		for (i = 0; i < FTS_GET_MODULE_NUM; i++) {
-			info = &module_list[i];
-			if (upg->module_id == info->id) {
-				dev_info(
-					fts_data->dev,
-					"module id match, get fw file successfully");
-				break;
-			}
-		}
-		if (i >= FTS_GET_MODULE_NUM) {
-			dev_err(fts_data->dev,
-				"no module id match, don't get file");
-			return -ENODATA;
-		}
-	}
-
-	upg->module_info = info;
-	return 0;
 }
 
 static int fts_get_fw_file_via_request_firmware(struct fts_upgrade *upg)
@@ -1073,15 +970,11 @@ static int fts_get_fw_file_via_request_firmware(struct fts_upgrade *upg)
 	int ret = 0;
 	const struct firmware *fw = NULL;
 	u8 *tmpbuf = NULL;
-	char fwname[FILE_NAME_LENGTH] = { 0 };
 
-	snprintf(fwname, FILE_NAME_LENGTH, "%s%s.bin",
-		 FTS_FW_NAME_PREX_WITH_REQUEST, upg->module_info->vendor_name);
-
-	ret = request_firmware(&fw, fwname, upg->ts_data->dev);
+	ret = request_firmware(&fw, fts_data->firmware_path, upg->ts_data->dev);
 	if (0 == ret) {
 		dev_info(fts_data->dev, "firmware(%s) request successfully",
-			 fwname);
+			 fts_data->firmware_path);
 		tmpbuf = vmalloc(fw->size);
 		if (NULL == tmpbuf) {
 			dev_err(fts_data->dev, "fw buffer vmalloc fail");
@@ -1094,7 +987,7 @@ static int fts_get_fw_file_via_request_firmware(struct fts_upgrade *upg)
 		}
 	} else {
 		dev_info(fts_data->dev, "firmware(%s) request fail,ret=%d",
-			 fwname, ret);
+			 fts_data->firmware_path, ret);
 	}
 
 	if (fw != NULL) {
@@ -1105,32 +998,6 @@ static int fts_get_fw_file_via_request_firmware(struct fts_upgrade *upg)
 	return ret;
 }
 
-static int fts_get_fw_file_via_i(struct fts_upgrade *upg)
-{
-	upg->fw = upg->module_info->fw_file;
-	upg->fw_length = upg->module_info->fw_len;
-	upg->fw_from_request = 0;
-
-	return 0;
-}
-
-/*****************************************************************************
- *  Name: fts_fwupg_get_fw_file
- *  Brief: get fw image/file,
- *         If support muitl modules, please set FTS_GET_MODULE_NUM, and FTS_-
- *         MODULE_ID/FTS_MODULE_NAME;
- *         If get fw via .i file, please set FTS_FW_REQUEST_SUPPORT=0, and F-
- *         TS_MODULE_ID; will use module id to distingwish different modules;
- *         If get fw via reques_firmware(), please set FTS_FW_REQUEST_SUPPORT
- *         =1, and FTS_MODULE_NAME; fw file name will be composed of "focalt-
- *         ech_ts_fw_" & FTS_VENDOR_NAME;
- *
- *         If have flash, module_id=vendor_id, If non-flash,module_id need
- *         transfer from LCD driver(gpio or lcm_id or ...);
- *  Input:
- *  Output:
- *  Return: return 0 if success, otherwise return error code
- *****************************************************************************/
 static int fts_fwupg_get_fw_file(struct fts_upgrade *upg)
 {
 	int ret = 0;
@@ -1142,25 +1009,11 @@ static int fts_fwupg_get_fw_file(struct fts_upgrade *upg)
 		return -EINVAL;
 	}
 
-	ret = fts_fwupg_get_module_info(upg);
-	if ((ret < 0) || (!upg->module_info)) {
-		dev_err(fts_data->dev, "get module info fail");
-		return ret;
-	}
-
-	if (FTS_FW_REQUEST_SUPPORT) {
-		msleep(500);
-		ret = fts_get_fw_file_via_request_firmware(upg);
-		if (ret != 0) {
-			get_fw_i_flag = true;
-		}
-	} else {
+	/* 500 */
+	msleep(10000);
+	ret = fts_get_fw_file_via_request_firmware(upg);
+	if (ret != 0)
 		get_fw_i_flag = true;
-	}
-
-	if (get_fw_i_flag) {
-		ret = fts_get_fw_file_via_i(upg);
-	}
 
 	dev_info(fts_data->dev, "upgrade fw file len:%d", upg->fw_length);
 	if (upg->fw_length < FTS_MIN_LEN) {
@@ -1176,12 +1029,6 @@ static void fts_fwupg_work(struct work_struct *work)
 	int ret = 0;
 	u8 chip_id = 0;
 	struct fts_upgrade *upg = fwupgrade;
-
-#if !FTS_AUTO_UPGRADE_EN
-	dev_info(fts_data->dev,
-		 "FTS_AUTO_UPGRADE_EN is disabled, not upgrade when power on");
-	return;
-#endif
 
 	dev_info(fts_data->dev, "fw upgrade work function");
 	if (!upg || !upg->ts_data) {
@@ -1238,9 +1085,9 @@ int fts_fwupg_init(struct fts_ts_data *ts_data)
 		return -ENOMEM;
 	}
 
-	if (1 == setting_count) {
+	if (1 == setting_count)
 		fwupgrade->setting_nf = setting;
-	} else {
+	else {
 		for (i = 0; i < setting_count; i++) {
 			setting = &upgrade_setting_list[i];
 			if ((setting->rom_idh ==

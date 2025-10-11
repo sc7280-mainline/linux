@@ -3048,7 +3048,7 @@ static int wcd938x_soc_codec_probe(struct snd_soc_component *component)
 	int ret, i;
 
 	time_left = wait_for_completion_timeout(&tx_sdw_dev->initialization_complete,
-						msecs_to_jiffies(2000));
+						msecs_to_jiffies(5000));
 	if (!time_left) {
 		dev_err(dev, "soundwire device init timeout\n");
 		return -ETIMEDOUT;

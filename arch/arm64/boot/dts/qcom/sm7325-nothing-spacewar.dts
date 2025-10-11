@@ -41,6 +41,7 @@
 		#size-cells = <2>;
 		ranges;
 
+		bootargs = "clk_ignore_unused pd_ignore_unused";
 		stdout-path = "serial0:115200n8";
 
 		framebuffer0: framebuffer@e1000000 {
@@ -379,6 +380,34 @@
 		regulator-max-microvolt = <65535>;
 		regulator-always-on;
 		vin-supply = <&vph_pwr>;
+	};
+
+	wcd9385: audio-codec {
+		compatible = "qcom,wcd9385-codec";
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&wcd_reset_n>;
+		pinctrl-1 = <&wcd_reset_n_sleep>;
+
+		reset-gpios = <&tlmm 83 GPIO_ACTIVE_LOW>;
+
+		qcom,rx-device = <&wcd_rx>;
+		qcom,tx-device = <&wcd_tx>;
+
+		vdd-rxtx-supply = <&vdd_txrx>;
+		vdd-io-supply = <&vdd_px_wcd9385>;
+		vdd-buck-supply = <&vdd_buck>;
+		vdd-mic-bias-supply = <&vdd_mic_bias>;
+
+		qcom,micbias1-microvolt = <2750000>;
+		qcom,micbias2-microvolt = <2700000>;
+		qcom,micbias3-microvolt = <2750000>;
+		qcom,micbias4-microvolt = <2750000>;
+
+		qcom,mbhc-buttons-vthreshold-microvolt = <75000 150000 237000 500000 500000
+							  500000 500000 500000>;
+		qcom,mbhc-headset-vthreshold-microvolt = <1700000>;
+		qcom,mbhc-headphone-vthreshold-microvolt = <50000>;
+		#sound-dai-cells = <1>;
 	};
 };
 
@@ -910,7 +939,13 @@
 };
 
 &cci1_i2c0 {
-	/* actuator (For Ultra Wide sensor) @ 0xc */
+	camu_dw9800w: actuator@c {
+		compatible = "dongwoon,dw9800w",
+			     "dongwoon,dw9800";
+		reg = <0x0c>;
+
+		vdd-supply = <&vreg_camu_vaf_1p8>;
+	};
 
 	camera@2d {
 		compatible = "samsung,s5kjn1";
@@ -929,6 +964,8 @@
 
 		orientation = <1>; /* Rear facing */
 		rotation = <90>;
+
+		lens-focus = <&camu_dw9800w>;
 
 		port {
 			camera_s5kjn1_ep: endpoint {
@@ -950,7 +987,14 @@
 };
 
 &cci1_i2c1 {
-	/* actuator (For Wide sensor) @ 0xc */
+	camw_ak7377: actuator@c {
+		compatible = "asahi-kasei,ak7377";
+		reg = <0x0c>;
+
+		vin-supply = <&vreg_cam_vio_1p8>;
+		vdd-supply = <&vreg_camw_vaf_1p8>;
+	};
+
 	/* C-PHY sony,imx766 (Wide) @ 0x10 */
 
 	camw_gt24p128e: eeprom@50 {
@@ -1074,6 +1118,20 @@
 &lpass_audiocc {
 	compatible = "qcom,qcm6490-lpassaudiocc";
 	/delete-property/ power-domains;
+};
+
+&lpass_rx_macro {
+	status = "okay";
+};
+
+&lpass_tx_macro {
+	status = "okay";
+};
+
+&lpass_va_macro {
+	qcom,dmic-sample-rate = <4800000>;
+	vdd-micb-supply = <&vdd_mic_bias>;
+	status = "okay";
 };
 
 &mdss {
@@ -1317,11 +1375,27 @@
 		reg = <PRIMARY_MI2S_RX>;
 		qcom,sd-lines = <1>;
 	};
+
+	dai@113 {
+		reg = <RX_CODEC_DMA_RX_0>;
+	};
+
+	dai@120 {
+		reg = <TX_CODEC_DMA_TX_3>;
+	};
 };
 
 &q6asmdai {
 	dai@0 {
 		reg = <MSM_FRONTEND_DAI_MULTIMEDIA1>;
+	};
+
+	dai@1 {
+		reg = <1>;
+	};
+
+	dai@2 {
+		reg = <2>;
 	};
 };
 
@@ -1379,11 +1453,41 @@
 	pinctrl-names = "default",
 			"sleep";
 
+	audio-routing = "IN1_HPHL", "HPHL_OUT",
+			"IN2_HPHR", "HPHR_OUT",
+			"AMIC1", "MIC BIAS1",
+			"AMIC2", "MIC BIAS2",
+			"AMIC3", "MIC BIAS1", // Unused?
+			"AMIC4", "MIC BIAS3",
+			"AMIC5", "MIC BIAS4",
+			/*"TX SWR_ADC0", "ADC1_OUTPUT", // txmacro < v9.2
+			"TX SWR_ADC1", "ADC2_OUTPUT";*/
+			"TX SWR_INPUT0", "ADC1_OUTPUT", // txmacro >= v9.2
+			"TX SWR_INPUT1", "ADC2_OUTPUT",
+			"TX SWR_INPUT4", "ADC3_OUTPUT",
+			"TX SWR_INPUT5", "ADC4_OUTPUT";
+
 	mm1-dai-link {
 		link-name = "MultiMedia1";
 
 		cpu {
 			sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA1>;
+		};
+	};
+
+	mm2-dai-link {
+		link-name = "MultiMedia2";
+
+		cpu {
+			sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA2>;
+		};
+	};
+
+	mm3-dai-link {
+		link-name = "MultiMedia3";
+
+		cpu {
+			sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA3>;
 		};
 	};
 
@@ -1394,12 +1498,44 @@
 			sound-dai = <&q6afedai PRIMARY_MI2S_RX>;
 		};
 
+		codec {
+			sound-dai = <&tfa9873_l 0>, <&tfa9873_r 0>;
+		};
+
 		platform {
 			sound-dai = <&q6routing>;
 		};
+	};
+
+	wcd-playback-dai-link {
+		link-name = "WCD Playback";
+
+		cpu {
+			sound-dai = <&q6afedai RX_CODEC_DMA_RX_0>;
+		};
 
 		codec {
-			sound-dai = <&tfa9873_l 0>, <&tfa9873_r 0>;
+			sound-dai = <&wcd9385 0>, <&swr0 0>, <&lpass_rx_macro 0>;
+		};
+
+		platform {
+			sound-dai = <&q6routing>;
+		};
+	};
+
+	wcd-capture-dai-link {
+		link-name = "WCD Capture";
+
+		cpu {
+			sound-dai = <&q6afedai TX_CODEC_DMA_TX_3>;
+		};
+
+		codec {
+			sound-dai = <&wcd9385 1>, <&swr1 0>, <&lpass_tx_macro 0>;
+		};
+
+		platform {
+			sound-dai = <&q6routing>;
 		};
 	};
 };
@@ -1407,8 +1543,8 @@
 &spi13 {
 	status = "okay";
 
-	focaltech@0 {
-		compatible = "focaltech,fts_ts";
+	touchscreen@0 {
+		compatible = "focaltech,ft3680";
 		reg = <0x0>;
 
 		spi-max-frequency = <6000000>;
@@ -1419,24 +1555,38 @@
 		focaltech,irq-gpio = <&tlmm 81 0x2008>;
 		focaltech,display-coords = <0 0 1080 2400>;
 		focaltech,max-touch-number = <10>;
-		focaltech,ic-type = <0x3658d488>;
 
 		vdd-supply = <&vdd_ts>;
 		iovdd-supply = <&vreg_l8c_1p8>;
 
+		firmware-name =
+			"qcom/sm7325/nothing/spacewar/focaltech_ts_novatek.bin";
+
 		pinctrl-names = "default";
 		pinctrl-0 = <&ts_int_n>,
 			    <&ts_reset_n>;
+	};
+};
 
-		focaltech,trusted-touch-mode = "vm_mode";
-		focaltech,touch-environment = "pvm";
-		focaltech,trusted-touch-spi-irq = <601>;
-		focaltech,trusted-touch-io-bases = <0xf134000 0xf135000
-						    0xf136000 0xf137000
-						    0xf169000 0xf151000
-						    0xa94000 0x00a10000>;
-		focaltech,trusted-touch-io-sizes = <0x1000 0x1000 0x1000 0x1000
-						    0x1000 0x1000 0x1000 0x4000>;
+&swr0 {
+	status = "okay";
+
+	wcd_rx: codec@0,4 {
+		compatible = "sdw20217010d00";
+		reg = <0 4>;
+
+		qcom,rx-port-mapping = <1 2 3 4 5>;
+	};
+};
+
+&swr1 {
+	status = "okay";
+
+	wcd_tx: codec@0,3 {
+		compatible = "sdw20217010d00";
+		reg = <0 3>;
+
+		qcom,tx-port-mapping = <1 2 3 4>;
 	};
 };
 
@@ -1522,6 +1672,19 @@
 		function = "mdp_vsync";
 		drive-strength = <2>;
 		bias-pull-down;
+	};
+
+	wcd_reset_n: wcd-reset-n-state {
+		pins = "gpio83";
+		function = "gpio";
+		drive-strength = <8>;
+	};
+
+	wcd_reset_n_sleep: wcd-reset-n-sleep-state {
+		pins = "gpio83";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
 	};
 
 	hst_bt_en: hst-bt-en-state {
