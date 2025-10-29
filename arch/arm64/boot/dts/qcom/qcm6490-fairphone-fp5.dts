@@ -497,6 +497,7 @@
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <2000000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			regulator-always-on; //FIXME: DVDD AW88261
 		};
 
 		vreg_l19b: ldo19 {
@@ -620,7 +621,7 @@
 
 		vreg_bob: bob {
 			regulator-name = "vreg_bob";
-			regulator-min-microvolt = <3008000>;
+			regulator-min-microvolt = <3150000>;
 			regulator-max-microvolt = <3960000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_AUTO>;
 		};
@@ -1287,6 +1288,13 @@
 
 	status = "okay";
 };
+ 
+&q6afedai {
+	dai@127 {
+		reg = <QUINARY_MI2S_RX>;
+		qcom,sd-lines = <0>;
+	};
+};
 
 &sound {
 	compatible = "fairphone,fp5-sndcard";
@@ -1301,6 +1309,23 @@
 
 		cpu {
 			sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA1>;
+		};
+	};
+
+	i2s-dai-link {
+		link-name = "I2S Playback";
+		cpu {
+			// From my understanding, the playback path to the amplifier is via GPIO152 / QUINARY_MI2S_RX.
+			// The amplifier also returns the audio (I2STXEN) via GPIO153 / QUINARY_MI2S_TX for echo-reference.
+			sound-dai = <&q6afedai QUINARY_MI2S_RX>;
+		};
+
+		platform {
+			sound-dai = <&q6routing>;
+		};
+
+		codec {
+			sound-dai = <&aw88261_l>, <&aw88261_r>;
 		};
 	};
 
@@ -1482,6 +1507,8 @@
 		drive-strength = <2>;
 		bias-pull-up;
 	};
+
+
 };
 
 &uart5 {
