@@ -24,6 +24,7 @@ enum qcom_battmgr_variant {
 	QCOM_BATTMGR_SM8350,
 	QCOM_BATTMGR_SM8550,
 	QCOM_BATTMGR_X1E80100,
+	QCOM_BATTMGR_SM8350_TAOYAO,
 };
 
 #define BATTMGR_BAT_STATUS		0x1
@@ -461,6 +462,10 @@ static int qcom_battmgr_bat_sm8350_update(struct qcom_battmgr *battmgr,
 		return -EINVAL;
 
 	prop = sm8350_bat_prop_map[psp];
+
+	// taoyao battery has an additional property between BATT_CHG_CTRL_LIM_MAX and BATT_TEMP
+	if (battmgr->variant == QCOM_BATTMGR_SM8350_TAOYAO && prop > BATT_CHG_CTRL_LIM_MAX)
+		prop++;
 
 	mutex_lock(&battmgr->lock);
 	ret = qcom_battmgr_request_property(battmgr, BATTMGR_BAT_PROPERTY_GET, prop, 0);
@@ -1390,6 +1395,11 @@ static void qcom_battmgr_sm8350_callback(struct qcom_battmgr *battmgr,
 	switch (opcode) {
 	case BATTMGR_BAT_PROPERTY_GET:
 		property = le32_to_cpu(resp->intval.property);
+
+		// taoyao battery has an additional property between BATT_CHG_CTRL_LIM_MAX and BATT_TEMP
+		if (battmgr->variant == QCOM_BATTMGR_SM8350_TAOYAO && property > BATT_CHG_CTRL_LIM_MAX + 1)
+			property--;
+
 		if (property == BATT_MODEL_NAME) {
 			if (payload_len != sizeof(resp->strval)) {
 				dev_warn(battmgr->dev,
@@ -1624,6 +1634,7 @@ static const struct of_device_id qcom_battmgr_of_variants[] = {
 	{ .compatible = "qcom,sc8280xp-pmic-glink", .data = (void *)QCOM_BATTMGR_SC8280XP },
 	{ .compatible = "qcom,sm8550-pmic-glink", .data = (void *)QCOM_BATTMGR_SM8550 },
 	{ .compatible = "qcom,x1e80100-pmic-glink", .data = (void *)QCOM_BATTMGR_X1E80100 },
+	{ .compatible = "xiaomi,taoyao-pmic-glink", .data = (void *)QCOM_BATTMGR_SM8350_TAOYAO },
 	/* Unmatched devices falls back to QCOM_BATTMGR_SM8350 */
 	{}
 };
