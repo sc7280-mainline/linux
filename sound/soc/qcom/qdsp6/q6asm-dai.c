@@ -111,7 +111,8 @@ static const struct snd_pcm_hardware q6asm_dai_hardware_playback = {
 				SNDRV_PCM_INFO_INTERLEAVED |
 				SNDRV_PCM_INFO_PAUSE | SNDRV_PCM_INFO_RESUME),
 	.formats =              (SNDRV_PCM_FMTBIT_S16_LE |
-				SNDRV_PCM_FMTBIT_S24_LE),
+				SNDRV_PCM_FMTBIT_S24_LE |
+				SNDRV_PCM_FMTBIT_S32_LE),
 	.rates =                SNDRV_PCM_RATE_8000_192000,
 	.rate_min =             8000,
 	.rate_max =             192000,
@@ -131,7 +132,7 @@ static const struct snd_pcm_hardware q6asm_dai_hardware_playback = {
 			.stream_name = "MultiMedia"#num" Playback",	\
 			.rates = (SNDRV_PCM_RATE_48000|		\
 					SNDRV_PCM_RATE_KNOT),		\
-			.formats = (SNDRV_PCM_FMTBIT_S24_LE),	\
+			.formats = (SNDRV_PCM_FMTBIT_S32_LE),	\
 			.channels_min = 2,				\
 			.channels_max = 2,				\
 			.rate_min =     48000,				\
@@ -474,6 +475,7 @@ static int q6asm_dai_hw_params(struct snd_soc_component *component,
 	case SNDRV_PCM_FORMAT_S16_LE:
 		prtd->bits_per_sample = 16;
 		break;
+	case SNDRV_PCM_FORMAT_S32_LE:
 	case SNDRV_PCM_FORMAT_S24_LE:
 		prtd->bits_per_sample = 24;
 		break;
