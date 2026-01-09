@@ -910,6 +910,7 @@
 	aw88261_l: audio-codec@34 {
 		compatible = "awinic,aw88261";
 		reg = <0x34>;
+		dvdd-supply = <&vreg_l18b>;
 		awinic,audio-channel = <0>;
 		awinic,sync-flag;
 		#sound-dai-cells = <0>;
@@ -918,6 +919,7 @@
 	aw88261_r: audio-codec@35 {
 		compatible = "awinic,aw88261";
 		reg = <0x35>;
+		dvdd-supply = <&vreg_l18b>;
 		awinic,audio-channel = <1>;
 		awinic,sync-flag;
 		#sound-dai-cells = <0>;
