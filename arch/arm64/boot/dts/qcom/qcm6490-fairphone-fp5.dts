@@ -914,6 +914,7 @@
 		awinic,audio-channel = <0>;
 		awinic,sync-flag;
 		#sound-dai-cells = <0>;
+		sound-name-prefix = "Amplifier L";
 	};
 
 	aw88261_r: audio-codec@35 {
@@ -923,6 +924,7 @@
 		awinic,audio-channel = <1>;
 		awinic,sync-flag;
 		#sound-dai-cells = <0>;
+		sound-name-prefix = "Amplifier R";
 	};
 };
 
