@@ -17,6 +17,8 @@
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
 #include <dt-bindings/sound/qcom,q6asm.h>
 #include <dt-bindings/sound/qcom,q6dsp-lpass-ports.h>
+#include <dt-bindings/sound/qcom,q6voice.h>
+
 #include "kodiak.dtsi"
 #include "pm7250b.dtsi"
 #include "pm7325.dtsi"
@@ -1300,7 +1302,38 @@
 	status = "okay";
 };
 
+&q6cvp {
+	status = "okay";
+};
+
+&q6cvs {
+	status = "okay";
+};
+
+&q6mvm {
+	status = "okay";
+};
+
+
+&q6voicedai {
+	dai@1 {
+		reg = <VOICEMMODE1>;
+	};
+};
+
 &q6afedai {
+	dai@104 {
+		reg = <DISPLAY_PORT_RX>;
+	};
+
+	dai@113 {
+		reg = <RX_CODEC_DMA_RX_0>;
+	};
+
+	dai@120 {
+		reg = <TX_CODEC_DMA_TX_3>;
+	};
+
 	dai@127 {
 		reg = <QUINARY_MI2S_RX>;
 		qcom,sd-lines = <0>;
@@ -1485,6 +1518,14 @@
 			sound-dai = <&q6routing>;
 		};
 	};
+
+	voicemmode1-dai-link {
+		link-name = "VoiceMMode1";
+		cpu {
+			sound-dai = <&q6voicedai VOICEMMODE1>;
+		};
+	};
+
 };
 
 &spi13 {
