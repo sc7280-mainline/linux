@@ -259,6 +259,14 @@ static const struct snd_kcontrol_new voicemmode1_tx_mixer_controls[] = {
 		       q6voice_get_mixer_capture, q6voice_put_mixer_capture),
 	SOC_SINGLE_EXT("QUIN_MI2S_TX", QUINARY_MI2S_TX, VOICEMMODE1, 1, 0,
 		       q6voice_get_mixer_capture, q6voice_put_mixer_capture),
+	SOC_SINGLE_EXT("TX_CODEC_DMA_TX_1", TX_CODEC_DMA_TX_1, VOICEMMODE1, 1, 0,
+		       q6voice_get_mixer_capture, q6voice_put_mixer_capture),
+	SOC_SINGLE_EXT("TX_CODEC_DMA_TX_2", TX_CODEC_DMA_TX_2, VOICEMMODE1, 1, 0,
+		       q6voice_get_mixer_capture, q6voice_put_mixer_capture),
+	SOC_SINGLE_EXT("TX_CODEC_DMA_TX_3", TX_CODEC_DMA_TX_3, VOICEMMODE1, 1, 0,
+		       q6voice_get_mixer_capture, q6voice_put_mixer_capture),
+	SOC_SINGLE_EXT("TX_CODEC_DMA_TX_4", TX_CODEC_DMA_TX_4, VOICEMMODE1, 1, 0,
+		       q6voice_get_mixer_capture, q6voice_put_mixer_capture),
 };
 
 static const struct snd_kcontrol_new primary_mi2s_rx_mixer_controls[] = {
@@ -336,6 +344,10 @@ static const struct snd_soc_dapm_route q6voice_dapm_routes[] = {
 	{ "VoiceMMode1 Capture Mixer",	"TERT_MI2S_TX",	"TERT_MI2S_TX" },
 	{ "VoiceMMode1 Capture Mixer",	"QUAT_MI2S_TX",	"QUAT_MI2S_TX" },
 	{ "VoiceMMode1 Capture Mixer",	"QUIN_MI2S_TX",	"QUIN_MI2S_TX" },
+	{ "VoiceMMode1 Capture Mixer",	"TX_CODEC_DMA_TX_1",	"TX_CODEC_DMA_TX_1" },
+	{ "VoiceMMode1 Capture Mixer",	"TX_CODEC_DMA_TX_2",	"TX_CODEC_DMA_TX_2" },
+	{ "VoiceMMode1 Capture Mixer",	"TX_CODEC_DMA_TX_3",	"TX_CODEC_DMA_TX_3" },
+	{ "VoiceMMode1 Capture Mixer",	"TX_CODEC_DMA_TX_4",	"TX_CODEC_DMA_TX_4" },
 	{ "VOICEMMODE1_UL1",		NULL,		"VoiceMMode1 Capture Mixer" },
 
 	{ "PRI_MI2S_RX Voice Mixer",	"CS-Voice",	"CS-VOICE_DL1" },
