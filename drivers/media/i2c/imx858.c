@@ -559,7 +559,7 @@ static int imx858_update_controls(struct imx858 *imx858,
 static int imx858_update_exp_gain(struct imx858 *imx858, u32 exposure, u32 gain)
 {
 	u32 lpfr;
-	int ret;
+	int ret = 0;
 
 	lpfr = imx858->vblank + imx858->cur_mode->height;
 
