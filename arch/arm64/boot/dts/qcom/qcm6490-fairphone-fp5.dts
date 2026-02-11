@@ -100,7 +100,7 @@
 			label = "Hall Effect Sensor";
 			gpios = <&tlmm 155 GPIO_ACTIVE_LOW>;
 			linux,input-type = <EV_SW>;
-			linux,code = <SW_LID>;
+			linux,code = <SW_MACHINE_COVER>;
 			linux,can-disable;
 			wakeup-source;
 		};
