@@ -33,7 +33,7 @@ struct q6voice_session {
 int q6voice_common_probe(struct apr_device *adev, enum q6voice_service_type type);
 void q6voice_common_remove(struct apr_device *adev);
 
-int q6voice_common_callback(struct apr_device *adev, struct apr_resp_pkt *data);
+int q6voice_common_callback(struct apr_device *adev, const struct apr_resp_pkt *data);
 int q6voice_common_send(struct q6voice_session *s, struct apr_hdr *hdr);
 
 struct q6voice_session *q6voice_session_create(enum q6voice_service_type type,
