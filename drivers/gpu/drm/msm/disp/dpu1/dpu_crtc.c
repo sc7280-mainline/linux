@@ -1400,6 +1400,17 @@ static int dpu_crtc_assign_resources(struct drm_crtc *crtc,
 	topology = dpu_crtc_get_topology(crtc, dpu_kms, crtc_state);
 	ret = dpu_rm_reserve(&dpu_kms->rm, global_state,
 			     crtc_state->crtc, &topology);
+	if (ret && topology.num_dspp) {
+		/*
+		 * If reservation failed with DSPP requested, retry without
+		 * DSPP. This handles hardware with limited DSPP blocks (e.g.
+		 * SC7280 has only 1 DSPP) where dual-display requires one
+		 * CRTC to operate without color management.
+		 */
+		topology.num_dspp = 0;
+		ret = dpu_rm_reserve(&dpu_kms->rm, global_state,
+				     crtc_state->crtc, &topology);
+	}
 	if (ret)
 		return ret;
 
