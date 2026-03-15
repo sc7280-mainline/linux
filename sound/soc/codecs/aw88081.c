@@ -966,8 +966,13 @@ static int aw88081_volume_get(struct snd_kcontrol *kcontrol,
 	struct snd_soc_component *codec = snd_kcontrol_chip(kcontrol);
 	struct aw88081 *aw88081 = snd_soc_component_get_drvdata(codec);
 	struct aw_volume_desc *vol_desc = &aw88081->aw_pa->volume_desc;
+	struct soc_mixer_control *mc =
+		(struct soc_mixer_control *)kcontrol->private_value;
 
 	ucontrol->value.integer.value[0] = vol_desc->ctl_volume;
+
+	if (mc->invert)
+		ucontrol->value.integer.value[0] = mc->max - ucontrol->value.integer.value[0];
 
 	return 0;
 }
@@ -986,6 +991,9 @@ static int aw88081_volume_set(struct snd_kcontrol *kcontrol,
 
 	if (value < mc->min || value > mc->max)
 		return -EINVAL;
+
+	if (mc->invert)
+		value = mc->max - value;
 
 	aw88083_i2c_wen(aw88081, true);
 
@@ -1034,7 +1042,7 @@ static int aw88081_set_fade_step(struct snd_kcontrol *kcontrol,
 
 static const struct snd_kcontrol_new aw88081_controls[] = {
 	SOC_SINGLE_EXT("PCM Playback Volume", AW88081_SYSCTRL2_REG,
-		0, AW88081_MUTE_VOL, 0, aw88081_volume_get,
+		0, AW88081_MUTE_VOL, 1, aw88081_volume_get,
 		aw88081_volume_set),
 	SOC_SINGLE_EXT("Fade Step", 0, 0, AW88081_MUTE_VOL, 0,
 		aw88081_get_fade_step, aw88081_set_fade_step),

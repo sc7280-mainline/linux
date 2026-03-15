@@ -248,8 +248,13 @@ static int aw88395_volume_get(struct snd_kcontrol *kcontrol,
 	struct snd_soc_component *codec = snd_kcontrol_chip(kcontrol);
 	struct aw88395 *aw88395 = snd_soc_component_get_drvdata(codec);
 	struct aw_volume_desc *vol_desc = &aw88395->aw_pa->volume_desc;
+	struct soc_mixer_control *mc =
+		(struct soc_mixer_control *)kcontrol->private_value;
 
 	ucontrol->value.integer.value[0] = vol_desc->ctl_volume;
+
+	if (mc->invert)
+		ucontrol->value.integer.value[0] = mc->max - ucontrol->value.integer.value[0];
 
 	return 0;
 }
@@ -267,6 +272,9 @@ static int aw88395_volume_set(struct snd_kcontrol *kcontrol,
 	value = ucontrol->value.integer.value[0];
 	if (value < mc->min || value > mc->max)
 		return -EINVAL;
+
+	if (mc->invert)
+		value = mc->max - value;
 
 	if (vol_desc->ctl_volume != value) {
 		vol_desc->ctl_volume = value;
@@ -346,7 +354,7 @@ static int aw88395_re_set(struct snd_kcontrol *kcontrol,
 
 static const struct snd_kcontrol_new aw88395_controls[] = {
 	SOC_SINGLE_EXT("PCM Playback Volume", AW88395_SYSCTRL2_REG,
-		6, AW88395_MUTE_VOL, 0, aw88395_volume_get,
+		6, AW88395_MUTE_VOL, 1, aw88395_volume_get,
 		aw88395_volume_set),
 	SOC_SINGLE_EXT("Fade Step", 0, 0, AW88395_MUTE_VOL, 0,
 		aw88395_get_fade_step, aw88395_set_fade_step),
