@@ -1,0 +1,73 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/display/panel/focaltech,ft8722.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Focaltech FT8722 LCD panel controller
+
+maintainers:
+  - Luka Panio <lukapanio@gmail.com>
+
+allOf:
+  - $ref: panel-common.yaml#
+
+properties:
+  compatible:
+    const: txd,txdi660jbpv
+
+  reg:
+    maxItems: 1
+
+  backlight: true
+  port: true
+  reset-gpios: true
+
+  vddio-supply:
+    description: power IC supply regulator
+
+  vddpos-supply:
+    description: positive boost supply regulator
+
+  vddneg-supply:
+    description: negative boost supply regulator
+
+required:
+  - compatible
+  - reg
+  - port
+  - vddio-supply
+  - vddpos-supply
+  - vddneg-supply
+  - reset-gpios
+
+additionalProperties: false
+
+examples:
+  - |
+    #include <dt-bindings/gpio/gpio.h>
+
+    dsi {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        panel@0 {
+            compatible = "txd,txdi660jbpv";
+            reg = <0>;
+            vddio-supply = <&vreg_l12c>;
+            vddpos-supply = <&lab>;
+            vddneg-supply = <&ibb>;
+            reset-gpios = <&tlmm 44 GPIO_ACTIVE_HIGH>;
+
+            backlight = <&aw99703_backlight>;
+            pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;
+            pinctrl-1 = <&sde_dsi_sleep &sde_te_active_sleep>;
+            pinctrl-names = "default", "sleep";
+
+            port {
+                panel_in: endpoint {
+                    remote-endpoint = <&mdss_dsi0_out>;
+                };
+            };
+        };
+    };
