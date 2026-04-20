@@ -13,6 +13,7 @@
 #include "q6mvm.h"
 #include "q6voice-common.h"
 
+#define VSS_IVOCPROC_TOPOLOGY_ID_NONE		0x00010F70
 #define VSS_IVOCPROC_TOPOLOGY_ID_TX_SM_ECNS		0x00010F71
 #define VSS_IVOCPROC_TOPOLOGY_ID_RX_DEFAULT		0x00010F77
 
@@ -267,7 +268,7 @@ struct q6voice *q6voice_create(struct device *dev, bool cvd_v2_3)
 
 		p->v = v;
 		p->type = path;
-		p->tx_topo = VSS_IVOCPROC_TOPOLOGY_ID_TX_SM_ECNS;
+		p->tx_topo = VSS_IVOCPROC_TOPOLOGY_ID_NONE;
 		p->rx_topo = VSS_IVOCPROC_TOPOLOGY_ID_RX_DEFAULT;
 		mutex_init(&p->lock);
 	}
