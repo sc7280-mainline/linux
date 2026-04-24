@@ -126,16 +126,20 @@ int devm_drm_panel_add(struct device *dev, struct drm_panel *panel)
 EXPORT_SYMBOL(devm_drm_panel_add);
 
 /**
- * drm_panel_prepare - power on a panel
+ * drm_panel_atomic_prepare - power on a panel
  * @panel: DRM panel
+ * @crtc: the CRTC used to drive the panel, may be NULL
+ * @state: current atomic commit state, may be NULL
  *
  * Calling this function will enable power and deassert any reset signals to
  * the panel. After this has completed it is possible to communicate with any
  * integrated circuitry via a command bus. This function cannot fail (as it is
  * called from the pre_enable call chain). There will always be a call to
- * drm_panel_disable() afterwards.
+ * drm_panel_atomic_disable() afterwards.
  */
-void drm_panel_prepare(struct drm_panel *panel)
+void drm_panel_atomic_prepare(struct drm_panel *panel,
+			      struct drm_crtc *crtc,
+			      struct drm_atomic_commit *state)
 {
 	struct drm_panel_follower *follower;
 	int ret;
@@ -150,11 +154,15 @@ void drm_panel_prepare(struct drm_panel *panel)
 
 	mutex_lock(&panel->follower_lock);
 
-	if (panel->funcs && panel->funcs->prepare) {
+	if (panel->funcs && panel->funcs->atomic_prepare) {
+		ret = panel->funcs->atomic_prepare(panel, crtc, state);
+	} else if (panel->funcs && panel->funcs->prepare) {
 		ret = panel->funcs->prepare(panel);
-		if (ret < 0)
-			goto exit;
+	} else {
+		ret = 0;
 	}
+	if (ret < 0)
+		goto exit;
 	panel->prepared = true;
 
 	list_for_each_entry(follower, &panel->followers, list) {
@@ -170,18 +178,22 @@ void drm_panel_prepare(struct drm_panel *panel)
 exit:
 	mutex_unlock(&panel->follower_lock);
 }
-EXPORT_SYMBOL(drm_panel_prepare);
+EXPORT_SYMBOL(drm_panel_atomic_prepare);
 
 /**
- * drm_panel_unprepare - power off a panel
+ * drm_panel_atomic_unprepare - power off a panel
  * @panel: DRM panel
+ * @crtc: the CRTC used to drive the panel, may be NULL
+ * @state: current atomic commit state, may be NULL
  *
  * Calling this function will completely power off a panel (assert the panel's
  * reset, turn off power supplies, ...). After this function has completed, it
  * is usually no longer possible to communicate with the panel until another
- * call to drm_panel_prepare().
+ * call to drm_panel_atomic_prepare().
  */
-void drm_panel_unprepare(struct drm_panel *panel)
+void drm_panel_atomic_unprepare(struct drm_panel *panel,
+				struct drm_crtc *crtc,
+				struct drm_atomic_commit *state)
 {
 	struct drm_panel_follower *follower;
 	int ret;
@@ -215,29 +227,37 @@ void drm_panel_unprepare(struct drm_panel *panel)
 				 follower->funcs->panel_unpreparing, ret);
 	}
 
-	if (panel->funcs && panel->funcs->unprepare) {
+	if (panel->funcs && panel->funcs->atomic_unprepare) {
+		ret = panel->funcs->atomic_unprepare(panel, crtc, state);
+	} else if (panel->funcs && panel->funcs->unprepare) {
 		ret = panel->funcs->unprepare(panel);
-		if (ret < 0)
-			goto exit;
+	} else {
+		ret = 0;
 	}
+	if (ret < 0)
+		goto exit;
 	panel->prepared = false;
 
 exit:
 	mutex_unlock(&panel->follower_lock);
 }
-EXPORT_SYMBOL(drm_panel_unprepare);
+EXPORT_SYMBOL(drm_panel_atomic_unprepare);
 
 /**
- * drm_panel_enable - enable a panel
+ * drm_panel_atomic_enable - enable a panel
  * @panel: DRM panel
+ * @crtc: the CRTC used to drive the panel, may be NULL
+ * @state: current atomic commit state, may be NULL
  *
  * Calling this function will cause the panel display drivers to be turned on
  * and the backlight to be enabled. Content will be visible on screen after
  * this call completes. This function cannot fail (as it is called from the
- * enable call chain). There will always be a call to drm_panel_disable()
- * afterwards.
+ * enable call chain). There will always be a call to
+ * drm_panel_atomic_disable() afterwards.
  */
-void drm_panel_enable(struct drm_panel *panel)
+void drm_panel_atomic_enable(struct drm_panel *panel,
+			     struct drm_crtc *crtc,
+			     struct drm_atomic_commit *state)
 {
 	struct drm_panel_follower *follower;
 	int ret;
@@ -252,11 +272,15 @@ void drm_panel_enable(struct drm_panel *panel)
 
 	mutex_lock(&panel->follower_lock);
 
-	if (panel->funcs && panel->funcs->enable) {
+	if (panel->funcs && panel->funcs->atomic_enable) {
+		ret = panel->funcs->atomic_enable(panel, crtc, state);
+	} else if (panel->funcs && panel->funcs->enable) {
 		ret = panel->funcs->enable(panel);
-		if (ret < 0)
-			goto exit;
+	} else {
+		ret = 0;
 	}
+	if (ret < 0)
+		goto exit;
 	panel->enabled = true;
 
 	ret = backlight_enable(panel->backlight);
@@ -277,17 +301,21 @@ void drm_panel_enable(struct drm_panel *panel)
 exit:
 	mutex_unlock(&panel->follower_lock);
 }
-EXPORT_SYMBOL(drm_panel_enable);
+EXPORT_SYMBOL(drm_panel_atomic_enable);
 
 /**
- * drm_panel_disable - disable a panel
+ * drm_panel_atomic_disable - disable a panel
  * @panel: DRM panel
+ * @crtc: the CRTC used to drive the panel, may be NULL
+ * @state: current atomic commit state, may be NULL
  *
  * This will typically turn off the panel's backlight or disable the display
  * drivers. For smart panels it should still be possible to communicate with
  * the integrated circuitry via any command bus after this call.
  */
-void drm_panel_disable(struct drm_panel *panel)
+void drm_panel_atomic_disable(struct drm_panel *panel,
+			      struct drm_crtc *crtc,
+			      struct drm_atomic_commit *state)
 {
 	struct drm_panel_follower *follower;
 	int ret;
@@ -326,17 +354,21 @@ void drm_panel_disable(struct drm_panel *panel)
 		DRM_DEV_INFO(panel->dev, "failed to disable backlight: %d\n",
 			     ret);
 
-	if (panel->funcs && panel->funcs->disable) {
+	if (panel->funcs && panel->funcs->atomic_disable) {
+		ret = panel->funcs->atomic_disable(panel, crtc, state);
+	} else if (panel->funcs && panel->funcs->disable) {
 		ret = panel->funcs->disable(panel);
-		if (ret < 0)
-			goto exit;
+	} else {
+		ret = 0;
 	}
+	if (ret < 0)
+		goto exit;
 	panel->enabled = false;
 
 exit:
 	mutex_unlock(&panel->follower_lock);
 }
-EXPORT_SYMBOL(drm_panel_disable);
+EXPORT_SYMBOL(drm_panel_atomic_disable);
 
 /**
  * drm_panel_get_modes - probe the available display modes of a panel
