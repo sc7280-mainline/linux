@@ -830,6 +830,42 @@
 	firmware-name = "qcom/sm7325/motorola/dubai/a660_zap.mbn";
 };
 
+&i2c1 {
+	clock-frequency = <100000>;
+
+	status = "okay";
+
+	/* Top speaker / ear speaker */
+	aw88261_l: audio-codec@34 {
+		compatible = "awinic,aw88261";
+		reg = <0x34>;
+
+		dvdd-supply = <&vreg_l18b_1p8>;
+		sound-name-prefix = "Amplifier L";
+		firmware-name = "qcom/sm7325/motorola/dubai/aw88261_acf.bin";
+
+		awinic,audio-channel = <0>;
+		awinic,sync-flag;
+
+		#sound-dai-cells = <0>;
+	};
+
+	/* Bottom speaker */
+	aw88261_r: audio-codec@35 {
+		compatible = "awinic,aw88261";
+		reg = <0x35>;
+
+		dvdd-supply = <&vreg_l18b_1p8>;
+		sound-name-prefix = "Amplifier R";
+		firmware-name = "qcom/sm7325/motorola/dubai/aw88261_acf.bin";
+
+		awinic,audio-channel = <1>;
+		awinic,sync-flag;
+
+		#sound-dai-cells = <0>;
+	};
+};
+
 &i2c4 {
 	clock-frequency = <100000>;
 
@@ -1222,6 +1258,13 @@
 	status = "okay";
 };
 
+&q6afedai {
+	dai@147 {
+		reg = <SENARY_MI2S_RX>;
+		qcom,sd-lines = <0>;
+	};
+};
+
 &q6asmdai {
 	dai@0 {
 		reg = <MSM_FRONTEND_DAI_MULTIMEDIA1>;
@@ -1361,6 +1404,22 @@
 
 		cpu {
 			sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA3>;
+		};
+	};
+
+	i2s-dai-link {
+		link-name = "Senary MI2S Playback";
+
+		codec {
+			sound-dai = <&aw88261_l>, <&aw88261_r>;
+		};
+
+		cpu {
+			sound-dai = <&q6afedai SENARY_MI2S_RX>;
+		};
+
+		platform {
+			sound-dai = <&q6routing>;
 		};
 	};
 
