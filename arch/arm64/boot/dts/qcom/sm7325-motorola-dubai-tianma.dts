@@ -11,3 +11,8 @@
 	model = "Motorola Edge 30 (Tianma)";
 	compatible = "motorola,dubai", "qcom,sm7325";
 };
+
+&panel {
+	compatible = "tianma,nt37701-dubai", "novatek,nt37701";
+	status = "okay";
+};
