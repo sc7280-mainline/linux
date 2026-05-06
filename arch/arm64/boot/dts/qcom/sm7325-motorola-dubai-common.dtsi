@@ -732,6 +732,46 @@
 	status = "okay";
 };
 
+&mdss {
+	status = "okay";
+};
+
+&mdss_dsi {
+	vdda-supply = <&vdd_a_dsi_0_1p2>;
+	status = "okay";
+
+	panel: panel@0 {
+		reg = <0>;
+
+		reset-gpios = <&tlmm 44 GPIO_ACTIVE_LOW>;
+
+		vdd-supply = <&disp_vci_3p0>;
+		vddio-supply = <&disp_iovcc_1p8>;
+
+		pinctrl-0 = <&oled_reset_n>,
+			    <&mdp_vsync_p>;
+		pinctrl-names = "default";
+
+		status = "disabled";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi_phy {
+	vdds-supply = <&vdd_a_dsi_0_0p9>;
+	status = "okay";
+};
+
 &pm7250b_adc {
 	channel@4e {
 		reg = <ADC5_AMUX_THM2_100K_PU>;
