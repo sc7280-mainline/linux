@@ -24,8 +24,6 @@
 #include "pmk8350.dtsi" /* PMK7325 */
 
 / {
-	model = "Motorola Edge 30";
-	compatible = "motorola,dubai", "qcom,sm7325";
 	chassis-type = "handset";
 
 	aliases {
