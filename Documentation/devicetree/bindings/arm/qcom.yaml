@@ -394,6 +394,7 @@ properties:
       - items:
           - enum:
               - fairphone,fp5
+              - nexcomputer,nexphone
               - particle,tachyon
               - qcom,qcm6490-idp
               - qcom,qcs6490-rb3gen2
