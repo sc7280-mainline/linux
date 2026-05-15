@@ -1170,6 +1170,8 @@ patternProperties:
     description: New Vision Display (Shenzhen) Co., Ltd.
   "^nexbox,.*":
     description: Nexbox
+  "^nexcomputer,.*":
+    description: Nex Computer LLC
   "^nextthing,.*":
     description: Next Thing Co.
   "^ni,.*":
