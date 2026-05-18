@@ -15,8 +15,7 @@
 #include "usb_offload_utils.h"
 #include "sdw.h"
 
-/* 48000 kHz * 32 bits/sample * 2 channels */
-#define MI2S_BCLK_RATE		3072000
+#define MI2S_BCLK_RATE		1536000
 
 struct sm8250_snd_data {
 	bool stream_prepared[AFE_PORT_MAX];
@@ -58,6 +57,7 @@ static void sm8250_snd_exit(struct snd_soc_pcm_runtime *rtd)
 static int sm8250_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
 				     struct snd_pcm_hw_params *params)
 {
+	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
 	struct snd_interval *rate = hw_param_interval(params,
 					SNDRV_PCM_HW_PARAM_RATE);
 	struct snd_interval *channels = hw_param_interval(params,
@@ -65,6 +65,16 @@ static int sm8250_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
 
 	rate->min = rate->max = 48000;
 	channels->min = channels->max = 2;
+	switch (cpu_dai->id) {
+	case TX_CODEC_DMA_TX_0:
+	case TX_CODEC_DMA_TX_1:
+	case TX_CODEC_DMA_TX_2:
+	case TX_CODEC_DMA_TX_3:
+		channels->min = 1;
+		break;
+	default:
+		break;
+	}
 
 	return 0;
 }
