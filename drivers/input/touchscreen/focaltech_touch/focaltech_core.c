@@ -31,7 +31,6 @@
 
 struct fts_ts_data *fts_data;
 
-static int fts_ts_suspend(struct device *dev);
 static int fts_ts_resume(struct device *dev);
 
 int fts_check_cid(struct fts_ts_data *ts_data, u8 id_h)
@@ -892,13 +891,6 @@ static void fts_power_off(struct fts_ts_data *ts_data)
 	regulator_bulk_disable(ARRAY_SIZE(fts_tp_supplies), ts_data->supplies);
 }
 
-static int fts_power_suspend(struct fts_ts_data *ts_data)
-{
-	fts_power_off(ts_data);
-
-	return 0;
-}
-
 static int fts_power_resume(struct fts_ts_data *ts_data)
 {
 	return fts_power_on(ts_data);
@@ -1052,38 +1044,6 @@ static void fts_resume_work(struct work_struct *work)
 		container_of(work, struct fts_ts_data, resume_work);
 
 	fts_ts_resume(ts_data->dev);
-}
-
-static int fts_ts_suspend(struct device *dev)
-{
-	int ret = 0;
-	struct fts_ts_data *ts_data = fts_data;
-
-	if (ts_data->suspended) {
-		dev_info(dev, "Already in suspend state");
-		return 0;
-	}
-
-	if (ts_data->fw_loading) {
-		dev_info(dev, "fw upgrade in process, can't suspend");
-		return 0;
-	}
-
-	dev_info(dev, "make TP enter into sleep mode");
-	ret = fts_write_reg(FTS_REG_POWER_MODE, FTS_REG_POWER_MODE_SLEEP);
-	if (ret < 0)
-		dev_err(dev, "set TP to sleep mode fail, ret=%d", ret);
-
-	if (!ts_data->ic_info.is_incell) {
-		ret = fts_power_suspend(ts_data);
-		if (ret < 0)
-			dev_err(dev, "power enter suspend fail");
-	}
-
-	fts_release_all_finger();
-	ts_data->suspended = true;
-
-	return 0;
 }
 
 static int fts_ts_resume(struct device *dev)
