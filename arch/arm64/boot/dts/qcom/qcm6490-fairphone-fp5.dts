@@ -947,7 +947,6 @@
 		firmware-name = "qcom/qcm6490/fairphone5/aw88261_acf.bin";
 
 		awinic,audio-channel = <0>;
-		awinic,sync-flag;
 
 		#sound-dai-cells = <0>;
 	};
@@ -962,7 +961,6 @@
 		firmware-name = "qcom/qcm6490/fairphone5/aw88261_acf.bin";
 
 		awinic,audio-channel = <1>;
-		awinic,sync-flag;
 
 		#sound-dai-cells = <0>;
 	};
