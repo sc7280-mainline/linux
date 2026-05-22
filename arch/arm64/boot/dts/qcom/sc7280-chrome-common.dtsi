@@ -67,9 +67,47 @@
 	status = "okay";
 };
 
+&lpass_rx_macro {
+	power-domains = <&lpass_hm LPASS_CORE_CC_LPASS_CORE_HM_GDSC>,
+			<&lpass_aon LPASS_AON_CC_LPASS_AUDIO_HM_GDSC>;
+	power-domain-names = "macro",
+			     "dcodec";
+
+	clocks = <&lpass_aon LPASS_AON_CC_TX_MCLK_CLK>,
+		 <&lpass_aon LPASS_AON_CC_TX_MCLK_2X_CLK>,
+		 <&lpass_va_macro>;
+	clock-names = "mclk",
+		      "npl",
+		      "fsgen";
+};
+
 &lpass_tlmm {
 	/delete-property/ clocks;
 	/delete-property/ clock-names;
+};
+
+&lpass_tx_macro {
+	clocks = <&lpass_aon LPASS_AON_CC_TX_MCLK_CLK>,
+		 <&lpass_aon LPASS_AON_CC_TX_MCLK_2X_CLK>,
+		 <&lpass_va_macro>;
+	clock-names = "mclk",
+		      "npl",
+		      "fsgen";
+
+	power-domains = <&lpass_hm LPASS_CORE_CC_LPASS_CORE_HM_GDSC>,
+			<&lpass_aon LPASS_AON_CC_LPASS_AUDIO_HM_GDSC>;
+	power-domain-names = "macro",
+			     "dcodec";
+};
+
+&lpass_va_macro {
+	clocks = <&lpass_aon LPASS_AON_CC_TX_MCLK_CLK>;
+	clock-names = "mclk";
+
+	power-domains = <&lpass_hm LPASS_CORE_CC_LPASS_CORE_HM_GDSC>,
+			<&lpass_aon LPASS_AON_CC_LPASS_AUDIO_HM_GDSC>;
+	power-domain-names = "macro",
+			     "dcodec";
 };
 
 &lpasscc {
