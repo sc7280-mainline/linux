@@ -1775,53 +1775,9 @@
 	status = "okay";
 };
 
-/* This should probably move into sc7280.dtsi / kodiak.dtsi, and the reverse to sc7280-chrome-common.dtsi */
-&lpass_rx_macro {
-	/delete-property/ power-domains;
-	/delete-property/ power-domain-names;
-	clocks = <&q6afecc LPASS_CLK_ID_TX_CORE_MCLK LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
-		 <&q6afecc LPASS_CLK_ID_TX_CORE_NPL_MCLK LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
-		 <&q6afecc LPASS_HW_MACRO_VOTE LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
-		 <&q6afecc LPASS_HW_DCODEC_VOTE LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
-		 <&lpass_va_macro>;
-	clock-names = "mclk",
-		      "npl",
-		      "macro",
-		      "dcodec",
-		      "fsgen";
-
-	clock-output-names = "mclk";
-};
-
+// TODO: Figure out TX macro versions
+// See https://lore.kernel.org/linux-arm-msm/20260526-sc7280-tx-macro-v1-0-1aad6900fec0@fairphone.com/t/
 &lpass_tx_macro {
 	compatible = "qcom,sm7325-lpass-tx-macro",
 		     "qcom,sm8450-lpass-tx-macro"; // txmacro = v9.2
-
-	/delete-property/ power-domains;
-	/delete-property/ power-domain-names;
-	clocks = <&q6afecc LPASS_CLK_ID_TX_CORE_MCLK LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
-		 <&q6afecc LPASS_CLK_ID_TX_CORE_NPL_MCLK LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
-		 <&q6afecc LPASS_HW_MACRO_VOTE LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
-		 <&q6afecc LPASS_HW_DCODEC_VOTE LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
-		 <&lpass_va_macro>;
-	clock-names = "mclk",
-		      "npl",
-		      "macro",
-		      "dcodec",
-		      "fsgen";
-
-	clock-output-names = "mclk";
-};
-
-&lpass_va_macro {
-	/delete-property/ power-domains;
-	/delete-property/ power-domain-names;
-	clocks = <&q6afecc LPASS_CLK_ID_TX_CORE_MCLK LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
-		 <&q6afecc LPASS_HW_MACRO_VOTE LPASS_CLK_ATTRIBUTE_COUPLE_NO>,
-		 <&q6afecc LPASS_HW_DCODEC_VOTE LPASS_CLK_ATTRIBUTE_COUPLE_NO>;
-	clock-names = "mclk",
-		      "macro",
-		      "dcodec";
-
-	clock-output-names = "fsgen";
 };
