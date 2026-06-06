@@ -472,69 +472,28 @@
 &usb_1 {
 	dr_mode = "host";
 
-	#address-cells = <1>;
-	#size-cells = <0>;
-
 	status = "okay";
-
-	/* 2.x hub on port 1 */
-	// usb_hub_2_x: hub@1 {
-	// 	compatible = "usb424,2514";
-	// 	reg = <1>;
-
-	// 	#address-cells = <1>;
-	// 	#size-cells = <0>;
-		
-	// 	ports {
-	// 		#address-cells = <1>;
-	// 		#size-cells = <0>;
-
-	// 		port@1 {
-	// 			reg = <1>;
-
-	// 			hub_usb_c1_con_hs: endpoint {
-	// 				remote-endpoint = <&pmic_glink_c1_hs_in>;
-	// 			};
-	// 		};
-
-	// 		port@2 {
-	// 			reg = <2>;
-
-	// 			hub_usb_c2_con_hs: endpoint {
-	// 				remote-endpoint = <&pmic_glink_c2_hs_in>;
-	// 			};
-	// 		};
-
-	// 		port@3 {
-	// 			reg = <3>;
-
-	// 			hub_usb_a1_con_hs: endpoint {
-	// 				remote-endpoint = <&pmic_glink_a1_hs_in>;
-	// 			};
-	// 		};
-	// 	};
-
-	// 	webcam@4 {
-	// 		compatible = "usb4f2,b72f";
-	// 		reg = <4>;
-	// 	};
-	// };
-
 };
 
 &usb_1_hsphy {
 	status = "okay";
 
-	// qcom,hs-rise-fall-time-bp = <0>;
-	// qcom,squelch-detector-bp = <(-2090)>;
-	// qcom,hs-disconnect-bp = <1743>;
-	// qcom,hs-amplitude-bp = <1780>;
-	// qcom,hs-crossover-voltage-microvolt = <(-31000)>;
-	// qcom,hs-output-impedance-micro-ohms = <2600000>;
+	vdda-pll-supply = <&vreg_l10c_0p8>;
+	vdda33-supply = <&vreg_l2b_3p0>;
+	vdda18-supply = <&vreg_l1c_1p8>;
+	qcom,hs-rise-fall-time-bp = <0>;
+	qcom,squelch-detector-bp = <(-2090)>;
+	qcom,hs-disconnect-bp = <1743>;
+	qcom,hs-amplitude-bp = <1780>;
+	qcom,hs-crossover-voltage-microvolt = <(-31000)>;
+	qcom,hs-output-impedance-micro-ohms = <2600000>;
 };
 
 &usb_1_qmpphy {
 	status = "okay";
+
+	vdda-phy-supply = <&vreg_l6b_1p2>;
+	vdda-pll-supply = <&vreg_l1b_0p8>;
 };
 
 // &usb_dp_qmpphy_out {
