@@ -29,7 +29,7 @@
 // /delete-node/ &cdsp_mem;
 // /delete-node/ &video_mem;
 // /delete-node/ &wlan_ce_mem;
-// /delete-node/ &wpss_mem;
+/delete-node/ &wpss_mem;
 /delete-node/ &xbl_mem;
 
 / {
@@ -59,6 +59,13 @@
 		enable-gpios = <&pm8350c_gpios 7 GPIO_ACTIVE_HIGH>;
 		pinctrl-0 = <&pmic_lcd_bl_en>;
 		pinctrl-names = "default";
+	};
+
+	reserved-memory {
+		wpss_mem: wpss@84800000 {
+			reg = <0x0 0x84800000 0x0 0x1900000>;
+			no-map;
+		};
 	};
 
 	// pmic-glink {
@@ -399,6 +406,26 @@
 	status = "okay";
 };
 
+&remoteproc_adsp {
+	firmware-name = "qcom/sc7280/galaxybook2go/adsp.mbn";
+	status = "okay";
+};
+
+&remoteproc_cdsp {
+	firmware-name = "qcom/sc7280/galaxybook2go/cdsp.mbn";
+	status = "okay";
+};
+
+&remoteproc_mpss {
+	firmware-name = "qcom/sc7280/galaxybook2go/modem.mbn";
+	status = "okay";
+};
+
+&remoteproc_wpss {
+	firmware-name = "qcom/sc7280/galaxybook2go/wpss.mbn";
+	status = "okay";
+};
+
 &tlmm {
 	hall_int_default: hall-int-state {
 		pins = "gpio35";
@@ -499,3 +526,7 @@
 // &usb_dp_qmpphy_out {
 // 	remote-endpoint = <&pmic_glink_c2_ss_in>;
 // };
+
+&wifi {
+	status = "okay";
+};
