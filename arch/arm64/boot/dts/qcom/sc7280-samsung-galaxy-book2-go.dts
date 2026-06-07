@@ -310,7 +310,11 @@
 };
 
 &gpu {
-	status = "disabled";
+	status = "okay";
+};
+
+&gpu_zap_shader {
+        firmware-name = "qcom/sc7280/galaxybook2go/a660_zap.mbn";
 };
 
 &mdss {
