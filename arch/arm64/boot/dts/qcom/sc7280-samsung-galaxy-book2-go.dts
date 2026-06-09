@@ -35,13 +35,13 @@
 / {
 	model = "Samsung Galaxy Book2 Go";
 	compatible = "samsung,book2go", "qcom,sc7280";
-    chassis-type = "laptop";
+	chassis-type = "laptop";
 
 	gpio-keys {
 		compatible = "gpio-keys";
 
-		pinctrl-names = "default";
 		pinctrl-0 = <&hall_int_default>;
+		pinctrl-names = "default";
 
 		switch-lid {
 			label = "Switch Lid";
@@ -159,12 +159,13 @@
 
 &i2c0 {
 	clock-frequency = <400000>;
+
 	status = "okay";
 
-	touchpad@40	{
+	touchpad@40 {
 		compatible = "hid-over-i2c";
 		reg = <0x40>;
-		hid-descr-addr = <0x0E>;
+		hid-descr-addr = <0x0e>;
 
 		interrupts-extended = <&tlmm 51 IRQ_TYPE_LEVEL_LOW>;
 
@@ -177,9 +178,10 @@
 
 &i2c12 {
 	clock-frequency = <100000>;
+
 	status = "okay";
 
-	keyboard@5	{
+	keyboard@5 {
 		compatible = "hid-over-i2c";
 		reg = <0x5>;
 		hid-descr-addr = <0x20>;
@@ -235,7 +237,7 @@
 			regulator-max-microvolt = <1800000>;
 		};
 
-        vreg_s1b_1p8: smps1 {
+		vreg_s1b_1p8: smps1 {
 			regulator-min-microvolt = <1872000>;
 			regulator-max-microvolt = <1872000>;
 		};
@@ -287,10 +289,6 @@
 	};
 };
 
-&dispcc {
-	status = "okay";
-};
-
 &gcc {
 	protected-clocks = <GCC_CFG_NOC_LPASS_CLK>,
 			   <GCC_EDP_CLKREF_EN>,
@@ -314,7 +312,7 @@
 };
 
 &gpu_zap_shader {
-        firmware-name = "qcom/sc7280/galaxybook2go/a660_zap.mbn";
+	firmware-name = "qcom/sc7280/galaxybook2go/a660_zap.mbn";
 };
 
 &mdss {
@@ -322,7 +320,6 @@
 };
 
 &mdss_edp {
-
 	status = "okay";
 
 	aux-bus {
@@ -376,6 +373,7 @@
 &pm8350c_pwm {
 	pinctrl-0 = <&pmic_lcd_bl_pwm>;
 	pinctrl-names = "default";
+
 	status = "okay";
 
 	multi-led {
@@ -416,21 +414,25 @@
 
 &remoteproc_adsp {
 	firmware-name = "qcom/sc7280/galaxybook2go/adsp.mbn";
+
 	status = "okay";
 };
 
 &remoteproc_cdsp {
 	firmware-name = "qcom/sc7280/galaxybook2go/cdsp.mbn";
+
 	status = "okay";
 };
 
 &remoteproc_mpss {
 	firmware-name = "qcom/sc7280/galaxybook2go/modem.mbn";
+
 	status = "okay";
 };
 
 &remoteproc_wpss {
 	firmware-name = "qcom/sc7280/galaxybook2go/wpss.mbn";
+
 	status = "okay";
 };
 
@@ -481,26 +483,6 @@
 	};
 };
 
-// &remoteproc_adsp {
-// 	firmware-name = "qcom/qcs6490/adsp.mbn";
-// 	status = "okay";
-// };
-
-// &remoteproc_cdsp {
-// 	firmware-name = "qcom/qcs6490/cdsp.mbn";
-// 	status = "okay";
-// };
-
-// &remoteproc_mpss {
-// 	firmware-name = "qcom/qcs6490/modem.mbn";
-// 	status = "okay";
-// };
-
-// &remoteproc_wpss {
-// 	firmware-name = "qcom/qcs6490/wpss.mbn";
-// 	status = "okay";
-// };
-
 &ufs_mem_hc {
 	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
 	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
@@ -536,8 +518,6 @@
 };
 
 &usb_1_hsphy {
-	status = "okay";
-
 	vdda-pll-supply = <&vreg_l10c_0p8>;
 	vdda33-supply = <&vreg_l2b_3p0>;
 	vdda18-supply = <&vreg_l1c_1p8>;
@@ -547,13 +527,15 @@
 	qcom,hs-amplitude-bp = <1780>;
 	qcom,hs-crossover-voltage-microvolt = <(-31000)>;
 	qcom,hs-output-impedance-micro-ohms = <2600000>;
+
+	status = "okay";
 };
 
 &usb_1_qmpphy {
-	status = "okay";
-
 	vdda-phy-supply = <&vreg_l6b_1p2>;
 	vdda-pll-supply = <&vreg_l1b_0p8>;
+
+	status = "okay";
 };
 
 // &usb_dp_qmpphy_out {
