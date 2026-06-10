@@ -157,44 +157,6 @@
 	// };
 };
 
-&i2c0 {
-	clock-frequency = <400000>;
-
-	status = "okay";
-
-	touchpad@40 {
-		compatible = "hid-over-i2c";
-		reg = <0x40>;
-		hid-descr-addr = <0x0e>;
-
-		interrupts-extended = <&tlmm 51 IRQ_TYPE_LEVEL_LOW>;
-
-		pinctrl-0 = <&hid_touchpad_default>;
-		pinctrl-names = "default";
-
-		wakeup-source;
-	};
-};
-
-&i2c12 {
-	clock-frequency = <100000>;
-
-	status = "okay";
-
-	keyboard@5 {
-		compatible = "hid-over-i2c";
-		reg = <0x5>;
-		hid-descr-addr = <0x20>;
-
-		interrupts-extended = <&tlmm 131 IRQ_TYPE_LEVEL_LOW>;
-
-		pinctrl-0 = <&hid_keyboard_default>;
-		pinctrl-names = "default";
-
-		wakeup-source;
-	};
-};
-
 &apps_rsc {
 	regulators-0 {
 		compatible = "qcom,pm7325-rpmh-regulators";
@@ -313,6 +275,48 @@
 
 &gpu_zap_shader {
 	firmware-name = "qcom/sc7280/galaxybook2go/a660_zap.mbn";
+};
+
+&i2c0 {
+	clock-frequency = <400000>;
+
+	status = "okay";
+
+	/* SSTP0001 */
+	touchpad@40 {
+		compatible = "hid-over-i2c";
+		reg = <0x40>;
+		hid-descr-addr = <0x0e>;
+
+		interrupts-extended = <&tlmm 51 IRQ_TYPE_LEVEL_LOW>;
+
+		pinctrl-0 = <&hid_touchpad_default>;
+		pinctrl-names = "default";
+
+		wakeup-source;
+	};
+};
+
+&i2c12 {
+	clock-frequency = <100000>;
+
+	status = "okay";
+
+	/* SSEC0001 */
+	keyboard@5 {
+		compatible = "hid-over-i2c";
+		reg = <0x5>;
+		hid-descr-addr = <0x20>;
+
+		interrupts-extended = <&tlmm 131 IRQ_TYPE_LEVEL_LOW>;
+
+		pinctrl-0 = <&hid_keyboard_default>;
+		pinctrl-names = "default";
+
+		wakeup-source;
+	};
+
+	// i2cdetect shows 0x0d
 };
 
 &mdss {
