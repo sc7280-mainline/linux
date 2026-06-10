@@ -298,6 +298,47 @@
 	};
 };
 
+// \\_SB.I2C2 -- has QCOM0AD3 at 0x08 & 0x09 - smells like pm8008
+// 200.0.1.0,qcpmic7280.cab,ACPI\QCOM0AD3,"Qualcomm(R) Power Management PML0","Qualcomm Inc.","Qualcomm Inc.",System,,1.0.3454.5500,03/28/2022
+&i2c1 {
+	status = "okay";
+
+	// i2cdetect shows 0x31, 0x32, 0x33, 0x34, 0x49
+};
+
+// \\_SB.I2C3 -- has SAMM0210 at 0x20 (SAR2) & 0x21 (SAR3) with interrupt
+// https://treexy.com/products/driver-fusion/database/sensors/samsung/a96t396-proximity/
+// A96T396 Proximity
+&i2c2 {
+	status = "okay";
+
+	// i2cdetect shows 0x20, 0x21
+};
+
+// \\_SB.I2C5 -- has SAMM0214 / ACC1 at 0x1d with interrupt
+// https://treexy.com/products/driver-fusion/database/sensors/samsung/lis2dlc12-accelerometer-device/
+// LIS2DLC12 Accelerometer
+&i2c4 {
+	status = "okay";
+
+	// i2cdetect shows 0x1d
+};
+
+// \\_SB.IC10 -- has SAMM0210 / SAR1 device on 0x20 with interrupt
+// should be i2c9
+&i2c9 {
+	status = "okay";
+
+	// i2cdetect shows 0x20
+};
+
+// \\_SB.IC11 i2c10 0x76 maybe also 0x09 and 0x0b
+&i2c10 {
+	status = "okay";
+
+	// i2cdetect shows 0x09, 0x0b
+};
+
 &i2c12 {
 	clock-frequency = <100000>;
 
@@ -318,6 +359,14 @@
 	};
 
 	// i2cdetect shows 0x0d
+};
+
+// \\_SB.IC15 -- has SAM060B / ECTC on 0x62 with interrupt
+// should be i2c14
+&i2c14 {
+	status = "okay";
+
+	// i2cdetect shows 0x60, 0x62, 0x63
 };
 
 &mdss {
