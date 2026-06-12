@@ -24,12 +24,8 @@
 #include "pm8350c.dtsi" /* PM7350C */
 #include "pmk8350.dtsi" /* PMK7325 */
 
-/delete-node/ &ipa_fw_mem;
-/delete-node/ &rmtfs_mem;
-// /delete-node/ &adsp_mem;
-// /delete-node/ &cdsp_mem;
-// /delete-node/ &video_mem;
-// /delete-node/ &wlan_ce_mem;
+// /delete-node/ &ipa_fw_mem;
+///delete-node/ &rmtfs_mem;
 /delete-node/ &wpss_mem;
 /delete-node/ &xbl_mem;
 
@@ -67,6 +63,15 @@
 			reg = <0x0 0x84800000 0x0 0x1900000>;
 			no-map;
 		};
+
+		//rmtfs_mem: rmtfs@a0800000 {
+		//	compatible = "qcom,rmtfs-mem";
+		//	reg = <0x0 0xa0800000 0x0 0x300000>;
+		//	no-map;
+
+		//	qcom,client-id = <1>;
+		//	qcom,vmid = <QCOM_SCM_VMID_MSS_MSA>;
+		//};
 	};
 
 	// pmic-glink {
@@ -369,6 +374,14 @@
 	// i2cdetect shows 0x60, 0x62, 0x63
 };
 
+&ipa {
+	qcom,gsi-loader = "self";
+	memory-region = <&ipa_fw_mem>;
+	firmware-name = "qcom/sc7280/galaxybook2go/ipa_fws.elf";
+
+	status = "okay";
+};
+
 &mdss {
 	status = "okay";
 };
@@ -478,6 +491,12 @@
 	status = "okay";
 };
 
+// RMTB = RMTA = RFS0_Y01_BAS = 0xA0800000
+// RMTL = RMTX = RFS0_Y01_LEN = 0x00300000
+// RFMA = RFMB = RFS0_Y02_BAS = 0x00000000
+// RFML = RFMS = RFS0_Y02_LEN = 0x00000000
+// RFAA = RFAB = RFS0_Y03_BAS = 0x00000000
+// RFAL = RFAS = RFS0_Y03_LEN = 0x00000000
 &remoteproc_mpss {
 	firmware-name = "qcom/sc7280/galaxybook2go/modem.mbn";
 
@@ -537,6 +556,10 @@
 	};
 };
 
+// uart5 debug uart - is this exposed on the PCB?
+
+// uart7 bluetooth chip
+
 &ufs_mem_hc {
 	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
 	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
@@ -595,6 +618,12 @@
 // &usb_dp_qmpphy_out {
 // 	remote-endpoint = <&pmic_glink_c2_ss_in>;
 // };
+
+&venus {
+	firmware-name = "qcom/sc7280/galaxybook2go/venus.mbn";
+
+	status = "okay";
+};
 
 &wifi {
 	status = "okay";
