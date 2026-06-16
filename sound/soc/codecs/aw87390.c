@@ -544,8 +544,7 @@ static int aw87390_i2c_probe(struct i2c_client *i2c)
 	const struct snd_soc_component_driver *priv;
 	int ret;
 
-	ret = i2c_check_functionality(i2c->adapter, I2C_FUNC_I2C);
-	if (!ret)
+	if (!i2c_check_functionality(i2c->adapter, I2C_FUNC_I2C))
 		return dev_err_probe(&i2c->dev, -ENXIO, "check_functionality failed\n");
 
 	aw87390 = devm_kzalloc(&i2c->dev, sizeof(*aw87390), GFP_KERNEL);
@@ -600,8 +599,8 @@ static const struct of_device_id aw87390_of_match[] = {
 MODULE_DEVICE_TABLE(of, aw87390_of_match);
 
 static const struct i2c_device_id aw87390_i2c_id[] = {
-	{ AW87390_I2C_NAME },
-	{ AW87391_I2C_NAME },
+	{ .name = AW87390_I2C_NAME },
+	{ .name = AW87391_I2C_NAME },
 	{ }
 };
 MODULE_DEVICE_TABLE(i2c, aw87390_i2c_id);

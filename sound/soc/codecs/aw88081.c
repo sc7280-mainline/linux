@@ -1240,8 +1240,8 @@ static const struct snd_soc_component_driver soc_codec_dev_aw88081 = {
 };
 
 static const struct i2c_device_id aw88081_i2c_id[] = {
-	{ AW88081_I2C_NAME, AW88081},
-	{ AW88083_I2C_NAME, AW88083},
+	{ .name = AW88081_I2C_NAME, .driver_data = AW88081 },
+	{ .name = AW88083_I2C_NAME, .driver_data = AW88083 },
 	{ }
 };
 MODULE_DEVICE_TABLE(i2c, aw88081_i2c_id);
@@ -1253,8 +1253,7 @@ static int aw88081_i2c_probe(struct i2c_client *i2c)
 	struct aw88081 *aw88081;
 	int ret;
 
-	ret = i2c_check_functionality(i2c->adapter, I2C_FUNC_I2C);
-	if (!ret)
+	if (!i2c_check_functionality(i2c->adapter, I2C_FUNC_I2C))
 		return dev_err_probe(&i2c->dev, -ENXIO, "check_functionality failed");
 
 	aw88081 = devm_kzalloc(&i2c->dev, sizeof(*aw88081), GFP_KERNEL);

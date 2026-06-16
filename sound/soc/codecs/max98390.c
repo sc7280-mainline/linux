@@ -1015,10 +1015,8 @@ static int max98390_i2c_probe(struct i2c_client *i2c)
 	struct i2c_adapter *adapter = i2c->adapter;
 	struct gpio_desc *reset_gpio;
 
-	ret = i2c_check_functionality(adapter,
-		I2C_FUNC_SMBUS_BYTE
-		| I2C_FUNC_SMBUS_BYTE_DATA);
-	if (!ret) {
+	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE |
+					      I2C_FUNC_SMBUS_BYTE_DATA)) {
 		dev_err(&i2c->dev, "I2C check functionality failed\n");
 		return -ENXIO;
 	}
@@ -1098,8 +1096,8 @@ static int max98390_i2c_probe(struct i2c_client *i2c)
 }
 
 static const struct i2c_device_id max98390_i2c_id[] = {
-	{ "max98390"},
-	{},
+	{ .name = "max98390" },
+	{ }
 };
 
 MODULE_DEVICE_TABLE(i2c, max98390_i2c_id);
