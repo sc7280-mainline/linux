@@ -93,7 +93,7 @@ struct ftxxxx_proc {
 };
 
 struct fts_ts_platform_data {
-	u32 irq_gpio;
+	struct gpio_desc *irq_gpio;
 	u32 irq_gpio_flags;
 	bool have_key;
 	u32 key_number;
