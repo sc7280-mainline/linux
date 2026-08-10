@@ -417,17 +417,7 @@ static int aw88261_dev_reg_update(struct aw88261 *aw88261,
 			break;
 	}
 
-	ret = aw88261_dev_set_vcalb(aw_dev);
-	if (ret)
-		return ret;
-
-	if (aw_dev->prof_cur != aw_dev->prof_index)
-		vol_desc->ctl_volume = 0;
-
-	/* keep min volume */
-	aw88261_dev_set_volume(aw_dev, vol_desc->mute_volume);
-
-	return ret;
+	return aw88261_dev_set_vcalb(aw_dev);
 }
 
 static int aw88261_dev_get_prof_name(struct aw_device *aw_dev, int index, char **prof_name)
