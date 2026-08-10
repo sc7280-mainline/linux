@@ -347,7 +347,6 @@ static int aw88261_dev_reg_update(struct aw88261 *aw88261,
 					unsigned char *data, unsigned int len)
 {
 	struct aw_device *aw_dev = aw88261->aw_pa;
-	struct aw_volume_desc *vol_desc = &aw_dev->volume_desc;
 	unsigned int read_val, efcheck_val, read_vol;
 	int data_len, i, ret;
 	int16_t *reg_data;
@@ -418,17 +417,7 @@ static int aw88261_dev_reg_update(struct aw88261 *aw88261,
 			break;
 	}
 
-	ret = aw88261_dev_set_vcalb(aw_dev);
-	if (ret)
-		return ret;
-
-	if (aw_dev->prof_cur != aw_dev->prof_index)
-		vol_desc->ctl_volume = 0;
-
-	/* keep min volume */
-	aw88261_dev_set_volume(aw_dev, vol_desc->mute_volume);
-
-	return ret;
+	return aw88261_dev_set_vcalb(aw_dev);
 }
 
 static int aw88261_dev_get_prof_name(struct aw_device *aw_dev, int index, char **prof_name)
