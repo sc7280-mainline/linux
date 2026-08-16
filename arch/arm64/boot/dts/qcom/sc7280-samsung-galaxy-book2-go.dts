@@ -342,6 +342,11 @@
 	status = "okay";
 
 	// i2cdetect shows 0x09, 0x0b
+
+	battery@b {
+		compatible = "sbs,sbs-battery";
+		reg = <0x0b>;
+	};
 };
 
 &i2c12 {
