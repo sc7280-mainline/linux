@@ -24,8 +24,8 @@
 #include "pm8350c.dtsi" /* PM7350C */
 #include "pmk8350.dtsi" /* PMK7325 */
 
-// /delete-node/ &ipa_fw_mem;
-///delete-node/ &rmtfs_mem;
+/delete-node/ &ipa_fw_mem;
+/delete-node/ &rmtfs_mem;
 /delete-node/ &wpss_mem;
 /delete-node/ &xbl_mem;
 
@@ -64,14 +64,19 @@
 			no-map;
 		};
 
-		//rmtfs_mem: rmtfs@a0800000 {
-		//	compatible = "qcom,rmtfs-mem";
-		//	reg = <0x0 0xa0800000 0x0 0x300000>;
-		//	no-map;
+		rmtfs_mem: rmtfs@a0800000 {
+			compatible = "qcom,rmtfs-mem";
+			reg = <0x0 0xa0800000 0x0 0x300000>;
+			no-map;
 
-		//	qcom,client-id = <1>;
-		//	qcom,vmid = <QCOM_SCM_VMID_MSS_MSA>;
-		//};
+			qcom,client-id = <1>;
+			//qcom,vmid = <QCOM_SCM_VMID_MSS_MSA>;
+		};
+
+		ipa_fw_mem: ipa-fw@81800000 {
+			reg = <0x0 0x81800000 0x0 0x70000>;
+			no-map;
+		};
 	};
 
 	// pmic-glink {
@@ -624,11 +629,11 @@
 // 	remote-endpoint = <&pmic_glink_c2_ss_in>;
 // };
 
-&venus {
-	firmware-name = "qcom/sc7280/galaxybook2go/venus.mbn";
-
-	status = "okay";
-};
+//&venus {
+//	firmware-name = "qcom/sc7280/galaxybook2go/venus.mbn";
+//
+//	status = "okay";
+//};
 
 &wifi {
 	status = "okay";
