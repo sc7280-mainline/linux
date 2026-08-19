@@ -1071,6 +1071,7 @@
 
 &mdss_dp_out {
 	data-lanes = <0 1>;
+	link-frequencies = /bits/ 64 <2700000000>;
 };
 
 &mdss_dsi {
