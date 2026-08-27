@@ -317,6 +317,11 @@
 
 		interrupts-extended = <&tlmm 51 IRQ_TYPE_LEVEL_LOW>;
 
+		vdd-supply = <&vreg_l7c_3p0>;
+		vddl-supply = <&vreg_l18b_1p8>;
+
+		post-power-on-delay-ms = <2>;
+
 		pinctrl-0 = <&hid_touchpad_default>;
 		pinctrl-names = "default";
 
