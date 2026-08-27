@@ -1,0 +1,661 @@
+// SPDX-License-Identifier: BSD-3-Clause
+/*
+ * Copyright (c) 2025, Jasper Korten <jja2000@gmail.com>
+ */
+
+/dts-v1/;
+
+/* PM7250B is configured to use SID8/9 */
+#define PM7250B_SID 8
+#define PM7250B_SID1 9
+
+#include <dt-bindings/iio/qcom,spmi-adc7-pm7325.h>
+#include <dt-bindings/iio/qcom,spmi-adc7-pmk8350.h>
+#include <dt-bindings/leds/common.h>
+#include <dt-bindings/media/video-interfaces.h>
+#include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
+#include <dt-bindings/regulator/qcom,rpmh-regulator.h>
+#include <dt-bindings/sound/qcom,q6asm.h>
+#include <dt-bindings/sound/qcom,q6dsp-lpass-ports.h>
+#include "kodiak.dtsi"
+#include "qcs6490-audioreach.dtsi"
+#include "pm7250b.dtsi"
+#include "pm7325.dtsi"
+#include "pm8350c.dtsi" /* PM7350C */
+#include "pmk8350.dtsi" /* PMK7325 */
+
+/delete-node/ &ipa_fw_mem;
+/delete-node/ &rmtfs_mem;
+/delete-node/ &wpss_mem;
+/delete-node/ &xbl_mem;
+
+/ {
+	model = "Samsung Galaxy Book2 Go";
+	compatible = "samsung,book2go", "qcom,sc7280";
+	chassis-type = "laptop";
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		pinctrl-0 = <&hall_int_default>;
+		pinctrl-names = "default";
+
+		switch-lid {
+			label = "Switch Lid";
+			gpios = <&tlmm 35 GPIO_ACTIVE_LOW>;
+			linux,input-type = <EV_SW>;
+			linux,code = <SW_LID>;
+			// wakeup-event-action = <EV_ACT_DEASSERTED>;
+			wakeup-source;
+		};
+	};
+
+	pm8350c_pwm_backlight: backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pm8350c_pwm 3 65535>;
+		enable-gpios = <&pm8350c_gpios 7 GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&pmic_lcd_bl_en>;
+		pinctrl-names = "default";
+	};
+
+	reserved-memory {
+		wpss_mem: wpss@84800000 {
+			reg = <0x0 0x84800000 0x0 0x1900000>;
+			no-map;
+		};
+
+		rmtfs_mem: rmtfs@a0800000 {
+			compatible = "qcom,rmtfs-mem";
+			reg = <0x0 0xa0800000 0x0 0x300000>;
+			no-map;
+
+			qcom,client-id = <1>;
+			//qcom,vmid = <QCOM_SCM_VMID_MSS_MSA>;
+		};
+
+		ipa_fw_mem: ipa-fw@81800000 {
+			reg = <0x0 0x81800000 0x0 0x70000>;
+			no-map;
+		};
+	};
+
+	// pmic-glink {
+	// 	compatible = "qcom,qcm6490-pmic-glink", "qcom,pmic-glink";
+
+	// 	#address-cells = <1>;
+	// 	#size-cells = <0>;
+	// 	orientation-gpios = <&tlmm 140 GPIO_ACTIVE_HIGH>;
+
+	// 	connector@0 {
+	// 		compatible = "usb-c-connector";
+	// 		reg = <0>;
+
+	// 		label = "Type C Left";
+	// 		power-role = "dual";
+	// 		data-role = "dual";
+
+	// 		ports {
+	// 			#address-cells = <1>;
+	// 			#size-cells = <0>;
+
+	// 			port@0 {
+	// 				reg = <0>;
+
+	// 				pmic_glink_c1_hs_in: endpoint {
+	// 					remote-endpoint = <&hub_usb_c1_con_hs>;
+	// 				};
+	// 			};
+	// 		};
+	// 	};
+
+	// 	connector@1 {
+	// 		compatible = "usb-c-connector";
+	// 		reg = <0>;
+
+	// 		label = "Type C Right";
+	// 		power-role = "dual";
+	// 		data-role = "dual";
+
+	// 		ports {
+	// 			#address-cells = <1>;
+	// 			#size-cells = <0>;
+
+	// 			port@0 {
+	// 				reg = <0>;
+
+	// 				pmic_glink_c2_hs_in: endpoint {
+	// 					remote-endpoint = <&hub_usb_c2_con_hs>;
+	// 				};
+	// 			};
+
+	// 			port@1 {
+	// 				reg = <1>;
+
+	// 				pmic_glink_c2_ss_in: endpoint {
+	// 					remote-endpoint = <&usb_dp_qmpphy_out>;
+	// 				};
+	// 			};
+
+	// 			// port@2 {
+	// 			// 	reg = <2>;
+
+	// 			// 	pmic_glink_c2_sbu_in: endpoint {
+	// 			// 		remote-endpoint = <&redriver_usb_con_sbu>;
+	// 			// 	};
+	// 			// };
+	// 		};
+	// 	};
+
+	// 	connector@2 {
+	// 		compatible = "usb-a-connector";
+	// 		reg = <2>;
+	// 		power-role = "dual";
+	// 		data-role = "dual";
+
+	// 		ports {
+	// 			#address-cells = <1>;
+	// 			#size-cells = <0>;
+
+	// 			port@0 {
+	// 				reg = <0>;
+
+	// 				pmic_glink_a1_hs_in: endpoint {
+	// 					remote-endpoint = <&hub_usb_a1_con_hs>;
+	// 				};
+	// 			};
+	// 		};
+	// 	};
+	// };
+};
+
+&apps_rsc {
+	regulators-0 {
+		compatible = "qcom,pm7325-rpmh-regulators";
+		qcom,pmic-id = "b";
+
+		vreg_l1b_0p8: ldo1 {
+			regulator-name = "vreg_l1b";
+			regulator-min-microvolt = <880000>;
+			regulator-max-microvolt = <912000>;
+		};
+
+		vreg_l2b_3p0: ldo2 {
+			regulator-name = "vreg_l2b";
+			regulator-min-microvolt = <3072000>;
+			regulator-max-microvolt = <3072000>;
+		};
+
+		vreg_l6b_1p2: ldo6 {
+			regulator-name = "vreg_l6b";
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1200000>;
+		};
+
+		vreg_l7b_2p9: ldo7 {
+			regulator-name = "vreg_l7b";
+			regulator-min-microvolt = <2504000>;
+			regulator-max-microvolt = <2960000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l9b_1p2: ldo9 {
+			regulator-name = "vreg_l9b";
+			regulator-min-microvolt = <1200000>;
+			regulator-max-microvolt = <1200000>;
+			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+		};
+
+		vreg_l18b_1p8: ldo18 {
+			regulator-name = "vreg_l18b";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+
+		vreg_l19b_1p8: ldo19 {
+			regulator-name = "vreg_l19b";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+
+		vreg_s1b_1p8: smps1 {
+			regulator-name = "vreg_s1b";
+			regulator-min-microvolt = <1872000>;
+			regulator-max-microvolt = <1872000>;
+		};
+
+		vreg_s7b_0p9: smps7 {
+			regulator-name = "vreg_s7b";
+			regulator-min-microvolt = <952000>;
+			regulator-max-microvolt = <952000>;
+		};
+
+		vreg_s8b_1p2: smps8 {
+			regulator-name = "vreg_s8b";
+			regulator-min-microvolt = <1256000>;
+			regulator-max-microvolt = <1256000>;
+		};
+	};
+
+	regulators-1 {
+		compatible = "qcom,pm8350c-rpmh-regulators";
+		qcom,pmic-id = "c";
+
+		vreg_l1c_1p8: ldo1 {
+			regulator-name = "vreg_l1c";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+
+		vreg_l6c_2p9: ldo6 {
+			regulator-name = "vreg_l6c";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <2950000>;
+		};
+
+		vreg_l7c_3p0: ldo7 {
+			regulator-name = "vreg_l7c";
+			regulator-min-microvolt = <3000000>;
+			regulator-max-microvolt = <3300000>;
+		};
+
+		vreg_l9c_2p9: ldo9 {
+			regulator-name = "vreg_l9c";
+			regulator-min-microvolt = <2960000>;
+			regulator-max-microvolt = <2960000>;
+		};
+
+		vreg_l10c_0p8: ldo10 {
+			regulator-name = "vreg_l10c";
+			regulator-min-microvolt = <880000>;
+			regulator-max-microvolt = <880000>;
+		};
+
+		vreg_l12c_1p8: ldo12 {
+			regulator-name = "vreg_l12c";
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+	};
+};
+
+&gcc {
+	protected-clocks = <GCC_CFG_NOC_LPASS_CLK>,
+			   <GCC_EDP_CLKREF_EN>,
+			   <GCC_MSS_CFG_AHB_CLK>,
+			   <GCC_MSS_GPLL0_MAIN_DIV_CLK_SRC>,
+			   <GCC_MSS_OFFLINE_AXI_CLK>,
+			   <GCC_MSS_Q6SS_BOOT_CLK_SRC>,
+			   <GCC_MSS_Q6_MEMNOC_AXI_CLK>,
+			   <GCC_MSS_SNOC_AXI_CLK>,
+			   <GCC_QSPI_CNOC_PERIPH_AHB_CLK>,
+			   <GCC_QSPI_CORE_CLK>,
+			   <GCC_QSPI_CORE_CLK_SRC>,
+			   <GCC_SEC_CTRL_CLK_SRC>,
+			   <GCC_WPSS_AHB_BDG_MST_CLK>,
+			   <GCC_WPSS_AHB_CLK>,
+			   <GCC_WPSS_RSCP_CLK>;
+};
+
+&gpu {
+	status = "okay";
+};
+
+&gpu_zap_shader {
+	firmware-name = "qcom/sc7280/galaxybook2go/a660_zap.mbn";
+};
+
+&i2c0 {
+	clock-frequency = <400000>;
+
+	status = "okay";
+
+	/* SSTP0001 */
+	touchpad@40 {
+		compatible = "hid-over-i2c";
+		reg = <0x40>;
+		hid-descr-addr = <0x0e>;
+
+		interrupts-extended = <&tlmm 51 IRQ_TYPE_LEVEL_LOW>;
+
+		vdd-supply = <&vreg_l7c_3p0>;
+		vddl-supply = <&vreg_l18b_1p8>;
+
+		post-power-on-delay-ms = <2>;
+
+		pinctrl-0 = <&hid_touchpad_default>;
+		pinctrl-names = "default";
+
+		wakeup-source;
+	};
+};
+
+// \\_SB.I2C2 -- has QCOM0AD3 at 0x08 & 0x09 - smells like pm8008
+// 200.0.1.0,qcpmic7280.cab,ACPI\QCOM0AD3,"Qualcomm(R) Power Management PML0","Qualcomm Inc.","Qualcomm Inc.",System,,1.0.3454.5500,03/28/2022
+&i2c1 {
+	status = "okay";
+
+	// i2cdetect shows 0x31, 0x32, 0x33, 0x34, 0x49
+};
+
+// \\_SB.I2C3 -- has SAMM0210 at 0x20 (SAR2) & 0x21 (SAR3) with interrupt
+// https://treexy.com/products/driver-fusion/database/sensors/samsung/a96t396-proximity/
+// A96T396 Proximity
+&i2c2 {
+	status = "okay";
+
+	// i2cdetect shows 0x20, 0x21
+};
+
+// \\_SB.I2C5 -- has SAMM0214 / ACC1 at 0x1d with interrupt
+// https://treexy.com/products/driver-fusion/database/sensors/samsung/lis2dlc12-accelerometer-device/
+// LIS2DLC12 Accelerometer
+&i2c4 {
+	status = "okay";
+
+	// i2cdetect shows 0x1d
+};
+
+// \\_SB.IC10 -- has SAMM0210 / SAR1 device on 0x20 with interrupt
+// should be i2c9
+&i2c9 {
+	status = "okay";
+
+	// i2cdetect shows 0x20
+};
+
+// \\_SB.IC11 i2c10 0x76 maybe also 0x09 and 0x0b
+&i2c10 {
+	status = "okay";
+
+	// i2cdetect shows 0x09, 0x0b
+
+	battery@b {
+		compatible = "sbs,sbs-battery";
+		reg = <0x0b>;
+	};
+};
+
+&i2c12 {
+	clock-frequency = <100000>;
+
+	status = "okay";
+
+	/* SSEC0001 */
+	keyboard@5 {
+		compatible = "hid-over-i2c";
+		reg = <0x5>;
+		hid-descr-addr = <0x20>;
+
+		interrupts-extended = <&tlmm 131 IRQ_TYPE_LEVEL_LOW>;
+
+		pinctrl-0 = <&hid_keyboard_default>;
+		pinctrl-names = "default";
+
+		wakeup-source;
+	};
+
+	// i2cdetect shows 0x0d
+};
+
+// \\_SB.IC15 -- has SAM060B / ECTC on 0x62 with interrupt
+// should be i2c14
+&i2c14 {
+	status = "okay";
+
+	// i2cdetect shows 0x60, 0x62, 0x63
+};
+
+&ipa {
+	qcom,gsi-loader = "self";
+	memory-region = <&ipa_fw_mem>;
+	firmware-name = "qcom/sc7280/galaxybook2go/ipa_fws.elf";
+
+	status = "okay";
+};
+
+&mdss {
+	status = "okay";
+};
+
+&mdss_edp {
+	status = "okay";
+
+	aux-bus {
+		edp_panel: panel {
+			compatible = "edp-panel";
+
+			backlight = <&pm8350c_pwm_backlight>;
+
+			port {
+				edp_panel_in: endpoint {
+					remote-endpoint = <&mdss_edp_out>;
+				};
+			};
+		};
+	};
+};
+
+&mdss_edp_out {
+	data-lanes = <0 1 2 3>;
+	link-frequencies = /bits/ 64 <1620000000 2700000000 5400000000 8100000000>;
+	remote-endpoint = <&edp_panel_in>;
+};
+
+&mdss_edp_phy {
+	vdda-pll-supply = <&vreg_l10c_0p8>;
+	vdda-phy-supply = <&vreg_l6b_1p2>;
+
+	status = "okay";
+};
+
+&pm8350c_gpios {
+	pmic_lcd_bl_en: pmic-lcd-bl-en-state {
+		pins = "gpio7";
+		function = "normal";
+		bias-disable;
+		qcom,drive-strength = <PMIC_GPIO_STRENGTH_LOW>;
+		output-low;
+		power-source = <0>;
+	};
+
+	pmic_lcd_bl_pwm: pmic-lcd-bl-pwm-state {
+		pins = "gpio8";
+		function = "func1";
+		bias-disable;
+		qcom,drive-strength = <PMIC_GPIO_STRENGTH_LOW>;
+		output-low;
+		power-source = <0>;
+	};
+};
+
+&pm8350c_pwm {
+	pinctrl-0 = <&pmic_lcd_bl_pwm>;
+	pinctrl-names = "default";
+
+	status = "okay";
+
+	multi-led {
+		color = <LED_COLOR_ID_RGB>;
+		function = LED_FUNCTION_STATUS;
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		led@1 {
+			reg = <1>;
+			color = <LED_COLOR_ID_RED>;
+		};
+
+		led@2 {
+			reg = <2>;
+			color = <LED_COLOR_ID_GREEN>;
+		};
+
+		led@3 {
+			reg = <3>;
+			color = <LED_COLOR_ID_BLUE>;
+		};
+	};
+};
+
+&pon_pwrkey {
+	status = "okay";
+};
+
+&qupv3_id_0 {
+	status = "okay";
+};
+
+&qupv3_id_1 {
+	status = "okay";
+};
+
+&remoteproc_adsp {
+	firmware-name = "qcom/sc7280/galaxybook2go/adsp.mbn";
+
+	status = "okay";
+};
+
+&remoteproc_cdsp {
+	firmware-name = "qcom/sc7280/galaxybook2go/cdsp.mbn";
+
+	status = "okay";
+};
+
+// RMTB = RMTA = RFS0_Y01_BAS = 0xA0800000
+// RMTL = RMTX = RFS0_Y01_LEN = 0x00300000
+// RFMA = RFMB = RFS0_Y02_BAS = 0x00000000
+// RFML = RFMS = RFS0_Y02_LEN = 0x00000000
+// RFAA = RFAB = RFS0_Y03_BAS = 0x00000000
+// RFAL = RFAS = RFS0_Y03_LEN = 0x00000000
+&remoteproc_mpss {
+	firmware-name = "qcom/sc7280/galaxybook2go/modem.mbn";
+
+	status = "okay";
+};
+
+&remoteproc_wpss {
+	firmware-name = "qcom/sc7280/galaxybook2go/wpss.mbn";
+
+	status = "okay";
+};
+
+&sdc2_clk {
+	drive-strength = <16>;
+	bias-disable;
+};
+
+&sdc2_cmd {
+	drive-strength = <10>;
+	bias-pull-up;
+};
+
+&sdc2_data {
+	drive-strength = <10>;
+	bias-pull-up;
+};
+
+&sdhc_2 {
+	vmmc-supply = <&vreg_l9c_2p9>;
+	vqmmc-supply = <&vreg_l6c_2p9>;
+
+	pinctrl-0 = <&sdc2_clk>, <&sdc2_cmd>, <&sdc2_data>;
+	pinctrl-1 = <&sdc2_clk_sleep>, <&sdc2_cmd_sleep>, <&sdc2_data_sleep>;
+
+	status = "okay";
+};
+
+&tlmm {
+	hall_int_default: hall-int-state {
+		pins = "gpio35";
+		function = "gpio";
+		bias-disable;
+	};
+
+	hid_keyboard_default: hid-keyboard-default-state {
+		pins = "gpio131";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+
+	hid_touchpad_default: hid-touchpad-default-state {
+		pins = "gpio61";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+};
+
+// uart5 debug uart - is this exposed on the PCB?
+
+// uart7 bluetooth chip
+
+&ufs_mem_hc {
+	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
+	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
+
+	// Yoinked from fp5, dsdt lists pmicvregvotes for both of these, no amperages in dsdt though
+	vcc-supply = <&vreg_l7b_2p9>;
+	vcc-max-microamp = <800000>;
+	/*
+	 * Technically l9b enables an eLDO (supplied by s1b) which then powers
+	 * VCCQ2 of the UFS.
+	 */
+	vccq-supply = <&vreg_l9b_1p2>;
+	vccq-max-microamp = <900000>;
+
+	status = "okay";
+};
+
+&ufs_mem_phy {
+	/*
+	 * FP5 dts has stuff here about regulators/supplies, no idea which ones I should use on this board
+	 * Also no device in dsdt on 1D87000.
+	 */
+	vdda-phy-supply = <&vreg_l10c_0p8>;
+	vdda-pll-supply = <&vreg_l6b_1p2>;
+
+	status = "okay";
+};
+
+&usb_1 {
+	dr_mode = "host";
+
+	status = "okay";
+};
+
+&usb_1_hsphy {
+	vdda-pll-supply = <&vreg_l10c_0p8>;
+	vdda33-supply = <&vreg_l2b_3p0>;
+	vdda18-supply = <&vreg_l1c_1p8>;
+	qcom,hs-rise-fall-time-bp = <0>;
+	qcom,squelch-detector-bp = <(-2090)>;
+	qcom,hs-disconnect-bp = <1743>;
+	qcom,hs-amplitude-bp = <1780>;
+	qcom,hs-crossover-voltage-microvolt = <(-31000)>;
+	qcom,hs-output-impedance-micro-ohms = <2600000>;
+
+	status = "okay";
+};
+
+&usb_1_qmpphy {
+	vdda-phy-supply = <&vreg_l6b_1p2>;
+	vdda-pll-supply = <&vreg_l1b_0p8>;
+
+	status = "okay";
+};
+
+// &usb_dp_qmpphy_out {
+// 	remote-endpoint = <&pmic_glink_c2_ss_in>;
+// };
+
+//&venus {
+//	firmware-name = "qcom/sc7280/galaxybook2go/venus.mbn";
+//
+//	status = "okay";
+//};
+
+&wifi {
+	status = "okay";
+};
