@@ -174,53 +174,63 @@
 		qcom,pmic-id = "b";
 
 		vreg_l1b_0p8: ldo1 {
+			regulator-name = "vreg_l1b";
 			regulator-min-microvolt = <880000>;
 			regulator-max-microvolt = <912000>;
 		};
 
 		vreg_l2b_3p0: ldo2 {
+			regulator-name = "vreg_l2b";
 			regulator-min-microvolt = <3072000>;
 			regulator-max-microvolt = <3072000>;
 		};
 
 		vreg_l6b_1p2: ldo6 {
+			regulator-name = "vreg_l6b";
 			regulator-min-microvolt = <1200000>;
 			regulator-max-microvolt = <1200000>;
 		};
 
 		vreg_l7b_2p9: ldo7 {
+			regulator-name = "vreg_l7b";
 			regulator-min-microvolt = <2504000>;
 			regulator-max-microvolt = <2960000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l9b_1p2: ldo9 {
+			regulator-name = "vreg_l9b";
 			regulator-min-microvolt = <1200000>;
 			regulator-max-microvolt = <1200000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
 		vreg_l18b_1p8: ldo18 {
+			regulator-name = "vreg_l18b";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
 		};
 
 		vreg_l19b_1p8: ldo19 {
+			regulator-name = "vreg_l19b";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
 		};
 
 		vreg_s1b_1p8: smps1 {
+			regulator-name = "vreg_s1b";
 			regulator-min-microvolt = <1872000>;
 			regulator-max-microvolt = <1872000>;
 		};
 
 		vreg_s7b_0p9: smps7 {
+			regulator-name = "vreg_s7b";
 			regulator-min-microvolt = <952000>;
 			regulator-max-microvolt = <952000>;
 		};
 
 		vreg_s8b_1p2: smps8 {
+			regulator-name = "vreg_s8b";
 			regulator-min-microvolt = <1256000>;
 			regulator-max-microvolt = <1256000>;
 		};
@@ -231,31 +241,37 @@
 		qcom,pmic-id = "c";
 
 		vreg_l1c_1p8: ldo1 {
+			regulator-name = "vreg_l1c";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
 		};
 
 		vreg_l6c_2p9: ldo6 {
+			regulator-name = "vreg_l6c";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <2950000>;
 		};
 
 		vreg_l7c_3p0: ldo7 {
+			regulator-name = "vreg_l7c";
 			regulator-min-microvolt = <3000000>;
 			regulator-max-microvolt = <3300000>;
 		};
 
 		vreg_l9c_2p9: ldo9 {
+			regulator-name = "vreg_l9c";
 			regulator-min-microvolt = <2960000>;
 			regulator-max-microvolt = <2960000>;
 		};
 
 		vreg_l10c_0p8: ldo10 {
+			regulator-name = "vreg_l10c";
 			regulator-min-microvolt = <880000>;
 			regulator-max-microvolt = <880000>;
 		};
 
 		vreg_l12c_1p8: ldo12 {
+			regulator-name = "vreg_l12c";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
 		};
