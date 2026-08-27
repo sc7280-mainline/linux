@@ -18,10 +18,10 @@
 #include <dt-bindings/sound/qcom,q6asm.h>
 #include <dt-bindings/sound/qcom,q6dsp-lpass-ports.h>
 #include "kodiak.dtsi"
-#include "pm7250b.dtsi"
-#include "pm7325.dtsi"
-#include "pm8350c.dtsi" /* PM7350C */
-#include "pmk8350.dtsi" /* PMK7325 */
+#include "pm7250b.dtsi" /* SID-8 & SID-9 */
+#include "pm7325.dtsi"  /* SID-1 */
+#include "pm8350c.dtsi" /* SID-2 (PM7350C) */
+#include "pmk8350.dtsi" /* SID-0 (PMK7325) */
 
 /delete-node/ &rmtfs_mem;
 
