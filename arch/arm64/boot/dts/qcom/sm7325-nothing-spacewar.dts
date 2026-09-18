@@ -1022,7 +1022,7 @@
 	status = "okay";
 
 	/* Top speaker: on the right with the phone in landscape, top edge right */
-	tfa9873_l: codec@34 {
+	tfa9873_top: codec@34 {
 		compatible = "nxp,tfa9873",
 			     "nxp,tfa9872";
 		reg = <0x34>;
@@ -1035,7 +1035,7 @@
 	};
 
 	/* Bottom speaker: on the left with the phone in landscape, top edge right */
-	tfa9873_r: codec@35 {
+	tfa9873_bottom: codec@35 {
 		compatible = "nxp,tfa9873",
 			     "nxp,tfa9872";
 		reg = <0x35>;
@@ -1407,7 +1407,7 @@
 		};
 
 		codec {
-			sound-dai = <&tfa9873_l 0>, <&tfa9873_r 0>;
+			sound-dai = <&tfa9873_top 0>, <&tfa9873_bottom 0>;
 		};
 	};
 };
