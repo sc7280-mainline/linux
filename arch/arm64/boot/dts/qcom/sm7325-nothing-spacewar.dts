@@ -1021,28 +1021,28 @@
 	clock-frequency = <100000>;
 	status = "okay";
 
-	/* Top speaker: on the right with the phone in landscape, top edge right */
-	tfa9873_top: codec@34 {
+	/* Top speaker */
+	tfa9873_l: codec@34 {
 		compatible = "nxp,tfa9873",
 			     "nxp,tfa9872";
 		reg = <0x34>;
 		reset-gpio = <&tlmm 101 GPIO_ACTIVE_HIGH>;
 
-		sound-channel = <1>;
-		sound-name-prefix = "Amplifier R";
+		sound-channel = <0>;
+		sound-name-prefix = "Amplifier L";
 
 		#sound-dai-cells = <1>;
 	};
 
-	/* Bottom speaker: on the left with the phone in landscape, top edge right */
-	tfa9873_bottom: codec@35 {
+	/* Bottom speaker */
+	tfa9873_r: codec@35 {
 		compatible = "nxp,tfa9873",
 			     "nxp,tfa9872";
 		reg = <0x35>;
 		reset-gpio = <&tlmm 101 GPIO_ACTIVE_HIGH>;
 
-		sound-channel = <0>;
-		sound-name-prefix = "Amplifier L";
+		sound-channel = <1>;
+		sound-name-prefix = "Amplifier R";
 
 		#sound-dai-cells = <1>;
 	};
@@ -1407,7 +1407,7 @@
 		};
 
 		codec {
-			sound-dai = <&tfa9873_top 0>, <&tfa9873_bottom 0>;
+			sound-dai = <&tfa9873_l 0>, <&tfa9873_r 0>;
 		};
 	};
 };
