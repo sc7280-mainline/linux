@@ -972,6 +972,13 @@ struct v4l2_subdev_internal_ops {
  * - Multiple streams per pad are supported
  */
 #define V4L2_SUBDEV_FL_STREAMS			(1U << 4)
+/*
+ * Set this flag to keep the subdevice active while its associated sensor is active.
+ *
+ * This is intended for ancillary devices, such as lens actuators, whose
+ * hardware state or physical position cannot be retained while powered off.
+ */
+#define V4L2_SUBDEV_FL_PM_LINK          (1U << 5)
 
 struct regulator_bulk_data;
 
