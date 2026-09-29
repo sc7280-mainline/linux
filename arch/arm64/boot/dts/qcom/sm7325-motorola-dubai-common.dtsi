@@ -835,32 +835,30 @@
 
 	status = "okay";
 
-	/* Top speaker / ear speaker */
-	aw88261_l: audio-codec@34 {
+	/* Bottom speaker */
+	aw88261_r: audio-codec@34 {
 		compatible = "awinic,aw88261";
 		reg = <0x34>;
-
-		dvdd-supply = <&vreg_l18b_1p8>;
-		sound-name-prefix = "Amplifier L";
-		firmware-name = "qcom/sm7325/motorola/dubai/aw88261_acf.bin";
-
-		awinic,audio-channel = <0>;
-		awinic,sync-flag;
-
-		#sound-dai-cells = <0>;
-	};
-
-	/* Bottom speaker */
-	aw88261_r: audio-codec@35 {
-		compatible = "awinic,aw88261";
-		reg = <0x35>;
 
 		dvdd-supply = <&vreg_l18b_1p8>;
 		sound-name-prefix = "Amplifier R";
 		firmware-name = "qcom/sm7325/motorola/dubai/aw88261_acf.bin";
 
+		awinic,audio-channel = <0>;
+
+		#sound-dai-cells = <0>;
+	};
+
+	/* Top speaker / ear speaker */
+	aw88261_l: audio-codec@35 {
+		compatible = "awinic,aw88261";
+		reg = <0x35>;
+
+		dvdd-supply = <&vreg_l18b_1p8>;
+		sound-name-prefix = "Amplifier L";
+		firmware-name = "qcom/sm7325/motorola/dubai/aw88261_acf.bin";
+
 		awinic,audio-channel = <1>;
-		awinic,sync-flag;
 
 		#sound-dai-cells = <0>;
 	};
