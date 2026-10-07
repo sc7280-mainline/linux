@@ -1842,51 +1842,33 @@ static const struct snd_kcontrol_new wcd9385_snd_controls[] = {
 };
 
 static int wcd938x_get_swr_port(struct snd_kcontrol *kcontrol,
-			    struct snd_ctl_elem_value *ucontrol)
+				struct snd_ctl_elem_value *ucontrol)
 {
+	struct soc_mixer_control *mixer = (struct soc_mixer_control *)kcontrol->private_value;
 	struct snd_soc_component *comp = snd_kcontrol_chip(kcontrol);
 	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(comp);
-	struct wcd938x_sdw_priv *wcd;
-	struct soc_mixer_control *mixer = (struct soc_mixer_control *)kcontrol->private_value;
-	int dai_id = mixer->shift;
-	int portidx, ch_idx = mixer->reg;
+	struct wcd938x_sdw_priv *wcd = wcd938x->sdw_priv[mixer->shift];
+	unsigned int portidx = wcd->ch_info[mixer->reg].port_num;
 
-
-	wcd = wcd938x->sdw_priv[dai_id];
-	portidx = wcd->ch_info[ch_idx].port_num;
-
-	ucontrol->value.integer.value[0] = wcd->port_enable[portidx];
+	ucontrol->value.integer.value[0] = wcd->port_enable[portidx] ? 1 : 0;
 
 	return 0;
 }
 
 static int wcd938x_set_swr_port(struct snd_kcontrol *kcontrol,
-			    struct snd_ctl_elem_value *ucontrol)
+				struct snd_ctl_elem_value *ucontrol)
 {
+	struct soc_mixer_control *mixer = (struct soc_mixer_control *)kcontrol->private_value;
 	struct snd_soc_component *comp = snd_kcontrol_chip(kcontrol);
 	struct wcd938x_priv *wcd938x = snd_soc_component_get_drvdata(comp);
-	struct wcd938x_sdw_priv *wcd;
-	struct soc_mixer_control *mixer =
-		(struct soc_mixer_control *)kcontrol->private_value;
-	int ch_idx = mixer->reg;
-	int portidx;
-	int dai_id = mixer->shift;
-	bool enable;
+	struct wcd938x_sdw_priv *wcd = wcd938x->sdw_priv[mixer->shift];
+	unsigned int portidx = wcd->ch_info[mixer->reg].port_num;
 
-	wcd = wcd938x->sdw_priv[dai_id];
+	wcd->port_enable[portidx] = !!ucontrol->value.integer.value[0];
 
-	portidx = wcd->ch_info[ch_idx].port_num;
-	if (ucontrol->value.integer.value[0])
-		enable = true;
-	else
-		enable = false;
-
-	wcd->port_enable[portidx] = enable;
-
-	wcd938x_connect_port(wcd, portidx, ch_idx, enable);
+	wcd938x_connect_port(wcd, portidx, mixer->reg, wcd->port_enable[portidx]);
 
 	return 1;
-
 }
 
 /* MBHC related */
