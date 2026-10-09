@@ -572,15 +572,15 @@
 		bias-disable;
 	};
 
-	hid_keyboard_default: hid-keyboard-default-state {
-		pins = "gpio131";
+	hid_touchpad_default: hid-touchpad-default-state {
+		pins = "gpio61";
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-up;
 	};
 
-	hid_touchpad_default: hid-touchpad-default-state {
-		pins = "gpio61";
+	hid_keyboard_default: hid-keyboard-default-state {
+		pins = "gpio131";
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-up;
