@@ -71,6 +71,7 @@
 		pinctrl-0 = <&edp_reg_en>;
 		pinctrl-names = "default";
 
+		regulator-always-on;
 		regulator-boot-on;
 	};
 
@@ -318,6 +319,7 @@
 
 &gpu_zap_shader {
 	firmware-name = "qcom/sc7280/galaxybook2go/a660_zap.mbn";
+	//firmware-name = "qcom/sc7280/galaxybook2go/qcdxkmsuc7280.mbn";
 };
 
 &i2c0 {
@@ -529,12 +531,14 @@
 
 &remoteproc_adsp {
 	firmware-name = "qcom/sc7280/galaxybook2go/adsp.mbn";
+	//firmware-name = "qcom/sc7280/galaxybook2go/qcadsp7280.mbn";
 
 	status = "okay";
 };
 
 &remoteproc_cdsp {
 	firmware-name = "qcom/sc7280/galaxybook2go/cdsp.mbn";
+	//firmware-name = "qcom/sc7280/galaxybook2go/qccdsp7280.mbn";
 
 	status = "okay";
 };
@@ -547,6 +551,7 @@
 // RFAL = RFAS = RFS0_Y03_LEN = 0x00000000
 &remoteproc_mpss {
 	firmware-name = "qcom/sc7280/galaxybook2go/modem.mbn";
+	//firmware-name = "qcom/sc7280/galaxybook2go/qcmpss7280.mbn";
 
 	status = "okay";
 };
@@ -767,6 +772,7 @@
 
 &venus {
 	firmware-name = "qcom/sc7280/galaxybook2go/venus.mbn";
+	//firmware-name = "qcom/sc7280/galaxybook2go/qcvss7280.mbn";
 
 	status = "okay";
 };
