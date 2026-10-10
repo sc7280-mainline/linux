@@ -45,7 +45,6 @@
 			gpios = <&tlmm 35 GPIO_ACTIVE_LOW>;
 			linux,input-type = <EV_SW>;
 			linux,code = <SW_LID>;
-			// wakeup-event-action = <EV_ACT_DEASSERTED>;
 			wakeup-source;
 		};
 	};
@@ -87,7 +86,6 @@
 			no-map;
 
 			qcom,client-id = <1>;
-			//qcom,vmid = <QCOM_SCM_VMID_MSS_MSA>;
 		};
 
 		ipa_fw_mem: ipa-fw@81800000 {
@@ -543,12 +541,6 @@
 	status = "okay";
 };
 
-// RMTB = RMTA = RFS0_Y01_BAS = 0xA0800000
-// RMTL = RMTX = RFS0_Y01_LEN = 0x00300000
-// RFMA = RFMB = RFS0_Y02_BAS = 0x00000000
-// RFML = RFMS = RFS0_Y02_LEN = 0x00000000
-// RFAA = RFAB = RFS0_Y03_BAS = 0x00000000
-// RFAL = RFAS = RFS0_Y03_LEN = 0x00000000
 &remoteproc_mpss {
 	firmware-name = "qcom/sc7280/galaxybook2go/modem.mbn";
 	//firmware-name = "qcom/sc7280/galaxybook2go/qcmpss7280.mbn";
@@ -675,9 +667,6 @@
 	};
 };
 
-// uart5 debug uart - is this exposed on the PCB?
-
-// uart7 bluetooth chip
 &uart7 {
 	/delete-property/interrupts;
 	interrupts-extended = <&intc GIC_SPI 608 IRQ_TYPE_LEVEL_HIGH>,
@@ -704,24 +693,16 @@
 		vddrfa0p8-supply = <&vreg_s7b_0p9>;
 		vddrfa1p7-supply = <&vreg_s1b_1p8>;
 		vddrfa1p2-supply = <&vreg_s8b_1p2>;
-		//vddrfa2p2-supply = <&vreg_s1c>;
-		//vddasd-supply = <&vreg_l11c>;
 
 		max-speed = <3200000>;
 	};
 };
 
 &ufs_mem_hc {
-	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
 	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
 
-	// Yoinked from fp5, dsdt lists pmicvregvotes for both of these, no amperages in dsdt though
 	vcc-supply = <&vreg_l7b_2p9>;
 	vcc-max-microamp = <800000>;
-	/*
-	 * Technically l9b enables an eLDO (supplied by s1b) which then powers
-	 * VCCQ2 of the UFS.
-	 */
 	vccq-supply = <&vreg_l9b_1p2>;
 	vccq-max-microamp = <900000>;
 
@@ -729,10 +710,6 @@
 };
 
 &ufs_mem_phy {
-	/*
-	 * FP5 dts has stuff here about regulators/supplies, no idea which ones I should use on this board
-	 * Also no device in dsdt on 1D87000.
-	 */
 	vdda-phy-supply = <&vreg_l10c_0p8>;
 	vdda-pll-supply = <&vreg_l6b_1p2>;
 
@@ -765,10 +742,6 @@
 
 	status = "okay";
 };
-
-// &usb_dp_qmpphy_out {
-// 	remote-endpoint = <&pmic_glink_c2_ss_in>;
-// };
 
 &venus {
 	firmware-name = "qcom/sc7280/galaxybook2go/venus.mbn";
