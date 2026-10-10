@@ -34,6 +34,10 @@
 	compatible = "samsung,book2go", "qcom,sc7280";
 	chassis-type = "laptop";
 
+	aliases {
+		serial1 = &uart7;
+	};
+
 	gpio-keys {
 		compatible = "gpio-keys";
 
@@ -566,6 +570,52 @@
 };
 
 &tlmm {
+	qup_uart7_sleep_cts: qup-uart7-sleep-cts-state {
+		pins = "gpio28";
+		function = "gpio";
+		/*
+		 * Configure a bias-bus-hold on CTS to lower power
+		 * usage when Bluetooth is turned off. Bus hold will
+		 * maintain a low power state regardless of whether
+		 * the Bluetooth module drives the pin in either
+		 * direction or leaves the pin fully unpowered.
+		 */
+		bias-bus-hold;
+	};
+
+	qup_uart7_sleep_rts: qup-uart7-sleep-rts-state {
+		pins = "gpio29";
+		function = "gpio";
+		/*
+		 * Configure pull-down on RTS. As RTS is active low
+		 * signal, pull it low to indicate the BT SoC that it
+		 * can wakeup the system anytime from suspend state by
+		 * pulling RX low (by sending wakeup bytes).
+		 */
+		bias-pull-down;
+	};
+
+	qup_uart7_sleep_tx: qup-uart7-sleep-tx-state {
+		pins = "gpio30";
+		function = "gpio";
+		/*
+		 * Configure pull-up on TX when it isn't actively driven
+		 * to prevent BT SoC from receiving garbage during sleep.
+		 */
+		bias-pull-up;
+	};
+
+	qup_uart7_sleep_rx: qup-uart7-sleep-rx-state {
+		pins = "gpio31";
+		function = "gpio";
+		/*
+		 * Configure a pull-up on RX. This is needed to avoid
+		 * garbage data when the TX pin of the Bluetooth module
+		 * is floating which may cause spurious wakeups.
+		 */
+		bias-pull-up;
+	};
+
 	hall_int_default: hall-int-state {
 		pins = "gpio35";
 		function = "gpio";
@@ -579,6 +629,19 @@
 		bias-pull-up;
 	};
 
+	bluetooth_enable_default: bluetooth-enable-default-state {
+		pins = "gpio85";
+		function = "gpio";
+		output-low;
+		bias-disable;
+	};
+
+	sw_ctrl_default: sw-ctrl-default-state {
+		pins = "gpio86";
+		function = "gpio";
+		bias-pull-down;
+	};
+
 	hid_keyboard_default: hid-keyboard-default-state {
 		pins = "gpio131";
 		function = "gpio";
@@ -590,6 +653,38 @@
 // uart5 debug uart - is this exposed on the PCB?
 
 // uart7 bluetooth chip
+&uart7 {
+	/delete-property/interrupts;
+	interrupts-extended = <&intc GIC_SPI 608 IRQ_TYPE_LEVEL_HIGH>,
+			      <&tlmm 31 IRQ_TYPE_EDGE_FALLING>;
+
+	pinctrl-1 = <&qup_uart7_sleep_cts>, <&qup_uart7_sleep_rts>, <&qup_uart7_sleep_tx>, <&qup_uart7_sleep_rx>;
+	pinctrl-names = "default", "sleep";
+
+	status = "okay";
+
+	bluetooth: bluetooth {
+		compatible = "qcom,wcn6750-bt";
+
+		pinctrl-0 = <&bluetooth_enable_default>, <&sw_ctrl_default>;
+		pinctrl-names = "default";
+
+		enable-gpios = <&tlmm 85 GPIO_ACTIVE_HIGH>;
+		swctrl-gpios = <&tlmm 86 GPIO_ACTIVE_HIGH>;
+
+		vddio-supply = <&vreg_l19b_1p8>;
+		vddaon-supply = <&vreg_s7b_0p9>;
+		vddbtcxmx-supply = <&vreg_s7b_0p9>;
+		vddrfacmn-supply = <&vreg_s7b_0p9>;
+		vddrfa0p8-supply = <&vreg_s7b_0p9>;
+		vddrfa1p7-supply = <&vreg_s1b_1p8>;
+		vddrfa1p2-supply = <&vreg_s8b_1p2>;
+		//vddrfa2p2-supply = <&vreg_s1c>;
+		//vddasd-supply = <&vreg_l11c>;
+
+		max-speed = <3200000>;
+	};
+};
 
 &ufs_mem_hc {
 	// Can't find this pin in DSDT, crd has it set to 175, fp5 has it set to 175
@@ -650,11 +745,11 @@
 // 	remote-endpoint = <&pmic_glink_c2_ss_in>;
 // };
 
-//&venus {
-//	firmware-name = "qcom/sc7280/galaxybook2go/venus.mbn";
-//
-//	status = "okay";
-//};
+&venus {
+	firmware-name = "qcom/sc7280/galaxybook2go/venus.mbn";
+
+	status = "okay";
+};
 
 &wifi {
 	status = "okay";
