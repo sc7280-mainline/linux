@@ -27,7 +27,7 @@
 
 / {
 	model = "Samsung Galaxy Book2 Go";
-	compatible = "samsung,book2go", "qcom,sc7280";
+	compatible = "samsung,galaxy-book2-go", "qcom,sc7280";
 	chassis-type = "laptop";
 
 	aliases {
@@ -56,6 +56,22 @@
 		enable-gpios = <&pm8350c_gpios 7 GPIO_ACTIVE_HIGH>;
 		pinctrl-0 = <&pmic_lcd_bl_en>;
 		pinctrl-names = "default";
+	};
+
+	vreg_edp_3p3: regulator-edp-3p3 {
+		compatible = "regulator-fixed";
+
+		regulator-name = "VREG_EDP_3P3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+
+		gpio = <&tlmm 96 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+
+		pinctrl-0 = <&edp_reg_en>;
+		pinctrl-names = "default";
+
+		regulator-boot-on;
 	};
 
 	reserved-memory {
@@ -424,6 +440,7 @@
 		edp_panel: panel {
 			compatible = "edp-panel";
 
+			power-supply = <&vreg_edp_3p3>;
 			backlight = <&pm8350c_pwm_backlight>;
 
 			port {
@@ -636,6 +653,13 @@
 		pins = "gpio86";
 		function = "gpio";
 		bias-pull-down;
+	};
+
+	edp_reg_en: edp-reg-en-state {
+		pins = "gpio96";
+		function = "gpio";
+		drive-strength = <16>;
+		bias-pull-up;
 	};
 
 	hid_keyboard_default: hid-keyboard-default-state {
