@@ -394,7 +394,7 @@ int qcom_mdt_load_no_init(struct device *dev, const struct firmware *fw,
 
 		offset = phdr->p_paddr - mem_reloc;
 		if (offset < 0 || offset + phdr->p_memsz > mem_size) {
-			dev_err(dev, "segment outside memory range\n");
+			dev_err(dev, "segment outside memory range (offset 0x%lx, p_memsz: 0x%x, mem_size: 0x%lx)\n", offset, phdr->p_memsz, mem_size);
 			ret = -EINVAL;
 			break;
 		}
