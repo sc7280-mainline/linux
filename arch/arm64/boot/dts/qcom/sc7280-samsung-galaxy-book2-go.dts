@@ -17,8 +17,8 @@
 #include "qcs6490-audioreach.dtsi"
 #include "pm7250b.dtsi"
 #include "pm7325.dtsi"
-#include "pm8350c.dtsi" /* PM7350C */
-#include "pmk8350.dtsi" /* PMK7325 */
+#include "pm8350c.dtsi"
+#include "pmk8350.dtsi"
 
 /delete-node/ &ipa_fw_mem;
 /delete-node/ &rmtfs_mem;
