@@ -226,12 +226,48 @@ static int __maybe_unused qcom_snps_hsphy_runtime_resume(struct device *dev)
 	return qcom_snps_hsphy_resume(hsphy);
 }
 
+/*
+ * Charger detection run by firmware (BC1.2 on QCM6490 with pmic_glink) puts the
+ * PHY into UTMI non-driving mode with the datapath override enabled and can
+ * leave it there. The controller then cannot drive the bus, so the HS chirp
+ * fails. Only a PHY re-init clears this, and nothing re-inits the PHY after
+ * detection. Clear the state; this is a no-op unless something outside this
+ * driver set it.
+ */
+static void qcom_snps_hsphy_clear_chg_det(struct qcom_snps_hsphy *hsphy)
+{
+	u32 ctrl0 = readl_relaxed(hsphy->base + USB2_PHY_USB_PHY_UTMI_CTRL0);
+	u32 cfg0 = readl_relaxed(hsphy->base + USB2_PHY_USB_PHY_CFG0);
+
+	if (!(ctrl0 & OPMODE_MASK) && !(cfg0 & UTMI_PHY_DATAPATH_CTRL_OVERRIDE_EN))
+		return;
+
+	dev_dbg(&hsphy->phy->dev,
+		"clearing charger-detection state (ctrl0 %#x cfg0 %#x)\n",
+		ctrl0, cfg0);
+
+	qcom_snps_hsphy_write_mask(hsphy->base, USB2_PHY_USB_PHY_UTMI_CTRL0,
+				   OPMODE_MASK, OPMODE_NORMAL);
+	qcom_snps_hsphy_write_mask(hsphy->base, USB2_PHY_USB_PHY_CFG0,
+				   UTMI_PHY_DATAPATH_CTRL_OVERRIDE_EN, 0);
+}
+
 static int qcom_snps_hsphy_set_mode(struct phy *phy, enum phy_mode mode,
 				    int submode)
 {
 	struct qcom_snps_hsphy *hsphy = phy_get_drvdata(phy);
 
 	hsphy->mode = mode;
+
+	/*
+	 * Reached from usb_add_hcd() before the host controller starts.
+	 * phy_initialized only changes in .init/.exit, which phy-core runs
+	 * under phy->mutex, like this callback.
+	 */
+	if (hsphy->phy_initialized &&
+	    (mode == PHY_MODE_USB_HOST || mode == PHY_MODE_USB_HOST_SS))
+		qcom_snps_hsphy_clear_chg_det(hsphy);
+
 	return 0;
 }
 
