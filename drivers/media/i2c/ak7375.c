@@ -118,33 +118,26 @@ static int ak7375_set_ctrl(struct v4l2_ctrl *ctrl)
 {
 	struct ak7375_device *dev_vcm = to_ak7375_vcm(ctrl);
 	const struct ak73xx_chipdef *cdef = dev_vcm->cdef;
+	int ret;
+
+	ret = pm_runtime_resume_and_get(dev_vcm->sd.dev);
+	if (ret < 0)
+		return ret;
 
 	if (ctrl->id == V4L2_CID_FOCUS_ABSOLUTE)
-		return ak7375_i2c_write(dev_vcm, cdef->reg_position,
+		ret = ak7375_i2c_write(dev_vcm, cdef->reg_position,
 					ctrl->val << cdef->shift_pos, 2);
+	else
+		ret = -EINVAL;
 
-	return -EINVAL;
+	pm_runtime_mark_last_busy(dev_vcm->sd.dev);
+	pm_runtime_put_autosuspend(dev_vcm->sd.dev);
+
+	return ret;
 }
 
 static const struct v4l2_ctrl_ops ak7375_vcm_ctrl_ops = {
 	.s_ctrl = ak7375_set_ctrl,
-};
-
-static int ak7375_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
-{
-	return pm_runtime_resume_and_get(sd->dev);
-}
-
-static int ak7375_close(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
-{
-	pm_runtime_put(sd->dev);
-
-	return 0;
-}
-
-static const struct v4l2_subdev_internal_ops ak7375_int_ops = {
-	.open = ak7375_open,
-	.close = ak7375_close,
 };
 
 static const struct v4l2_subdev_ops ak7375_ops = { };
@@ -200,8 +193,8 @@ static int ak7375_probe(struct i2c_client *client)
 	}
 
 	v4l2_i2c_subdev_init(&ak7375_dev->sd, client, &ak7375_ops);
-	ak7375_dev->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
-	ak7375_dev->sd.internal_ops = &ak7375_int_ops;
+	ak7375_dev->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE |
+	                        V4L2_SUBDEV_FL_PM_LINK;
 	ak7375_dev->sd.entity.function = MEDIA_ENT_F_LENS;
 
 	ret = ak7375_init_controls(ak7375_dev);
@@ -212,15 +205,24 @@ static int ak7375_probe(struct i2c_client *client)
 	if (ret < 0)
 		goto err_cleanup;
 
+	if (!IS_ENABLED(CONFIG_PM))
+		pm_runtime_set_active(&client->dev);
+	pm_runtime_enable(&client->dev);
+
 	ret = v4l2_async_register_subdev(&ak7375_dev->sd);
 	if (ret < 0)
-		goto err_cleanup;
+		goto err_power_off;
 
-	pm_runtime_set_active(&client->dev);
-	pm_runtime_enable(&client->dev);
+	pm_runtime_set_autosuspend_delay(&client->dev, 1000);
+	pm_runtime_use_autosuspend(&client->dev);
 	pm_runtime_idle(&client->dev);
 
 	return 0;
+
+err_power_off:
+	pm_runtime_disable(&client->dev);
+	if (!IS_ENABLED(CONFIG_PM))
+		pm_runtime_set_suspended(&client->dev);
 
 err_cleanup:
 	v4l2_ctrl_handler_free(&ak7375_dev->ctrls_vcm);
@@ -236,7 +238,8 @@ static void ak7375_remove(struct i2c_client *client)
 
 	ak7375_subdev_cleanup(ak7375_dev);
 	pm_runtime_disable(&client->dev);
-	pm_runtime_set_suspended(&client->dev);
+	if (!IS_ENABLED(CONFIG_PM))
+		pm_runtime_set_suspended(&client->dev);
 }
 
 /*
@@ -336,7 +339,8 @@ static const struct of_device_id ak7375_of_table[] = {
 MODULE_DEVICE_TABLE(of, ak7375_of_table);
 
 static const struct dev_pm_ops ak7375_pm_ops = {
-	SET_SYSTEM_SLEEP_PM_OPS(ak7375_vcm_suspend, ak7375_vcm_resume)
+	SET_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
+				pm_runtime_force_resume)
 	SET_RUNTIME_PM_OPS(ak7375_vcm_suspend, ak7375_vcm_resume, NULL)
 };
 

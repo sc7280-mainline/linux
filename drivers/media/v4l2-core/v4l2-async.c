@@ -318,6 +318,7 @@ static int v4l2_async_create_ancillary_links(struct v4l2_async_notifier *n,
 {
 #if IS_ENABLED(CONFIG_MEDIA_CONTROLLER)
 	struct media_link *link;
+	struct device_link *devlink;
 
 	if (sd->entity.function != MEDIA_ENT_F_LENS &&
 	    sd->entity.function != MEDIA_ENT_F_FLASH)
@@ -331,11 +332,20 @@ static int v4l2_async_create_ancillary_links(struct v4l2_async_notifier *n,
 	}
 
 	link = media_create_ancillary_link(&n->sd->entity, &sd->entity);
+	if (IS_ERR(link))
+		return PTR_ERR(link);
 
-	return IS_ERR(link) ? PTR_ERR(link) : 0;
-#else
-	return 0;
+	if (sd->flags & V4L2_SUBDEV_FL_PM_LINK) {
+		devlink = device_link_add(n->sd->dev, sd->dev,
+					  DL_FLAG_PM_RUNTIME |
+					  DL_FLAG_AUTOREMOVE_CONSUMER);
+		if (!devlink)
+			dev_warn(notifier_dev(n),
+				 "failed to link power management of %s to %s\n",
+				 dev_name(sd->dev), dev_name(n->sd->dev));
+	}
 #endif
+	return 0;
 }
 
 static int v4l2_async_match_notify(struct v4l2_async_notifier *notifier,
