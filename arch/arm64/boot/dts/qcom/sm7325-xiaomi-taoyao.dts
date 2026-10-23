@@ -873,7 +873,8 @@
 };
 
 &sound {
-	compatible = "xiaomi,taoyao-sndcard";
+	compatible = "xiaomi,taoyao-sndcard",
+		     "motorola,dubai-sndcard";
 
 	model = "taoyao";
 
