@@ -1398,16 +1398,16 @@
 	i2s-dai-link {
 		link-name = "I2S Playback";
 
+		codec {
+			sound-dai = <&tfa9873_l 0>, <&tfa9873_r 0>;
+		};
+
 		cpu {
 			sound-dai = <&q6afedai PRIMARY_MI2S_RX>;
 		};
 
 		platform {
 			sound-dai = <&q6routing>;
-		};
-
-		codec {
-			sound-dai = <&tfa9873_l 0>, <&tfa9873_r 0>;
 		};
 	};
 };
