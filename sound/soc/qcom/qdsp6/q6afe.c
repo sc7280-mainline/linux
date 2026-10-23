@@ -1659,7 +1659,11 @@ void q6afe_cdc_dma_port_prepare(struct q6afe_port *port,
 	dma_cfg->data_format = cfg->data_format;
 	dma_cfg->num_channels = cfg->num_channels;
 	if (!cfg->active_channels_mask)
-		dma_cfg->active_channels_mask = (1 << cfg->num_channels) - 1;
+		/* EXPERIMENT: the vendor feeds this field the TX macro's active
+		 * DECIMATOR mask (DEC1|DEC2 = 0x6) for the stock handset-mic path,
+		 * not (1 << num_channels) - 1 = 0x3, which names AIF1 slots 0/1 and
+		 * slot 0 is DEC0 - a decimator this device never enables. */
+		dma_cfg->active_channels_mask = 0x6;
 }
 EXPORT_SYMBOL_GPL(q6afe_cdc_dma_port_prepare);
 /**
