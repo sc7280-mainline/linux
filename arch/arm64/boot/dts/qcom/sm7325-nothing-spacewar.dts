@@ -1325,12 +1325,6 @@
 	};
 };
 
-&q6asmdai {
-	dai@0 {
-		reg = <MSM_FRONTEND_DAI_MULTIMEDIA1>;
-	};
-};
-
 &qfprom {
 	vcc-supply = <&vdd_qfprom>;
 };
