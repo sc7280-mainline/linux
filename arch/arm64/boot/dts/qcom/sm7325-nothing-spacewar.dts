@@ -921,7 +921,7 @@
 		vdda-supply = <&vreg_camu_vana_2p8>;
 
 		clocks = <&camcc CAM_CC_MCLK2_CLK>;
-		clock-frequency = <19200000>;
+		// clock-frequency = <19200000>; // FIXME invalid property - probably should get assigned-clock-rates
 
 		reset-gpios = <&tlmm 77 GPIO_ACTIVE_LOW>;
 		pinctrl-0 = <&mclk2_active>;
