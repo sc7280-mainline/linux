@@ -1376,8 +1376,8 @@
 };
 
 &sound {
-	compatible = "qcom,sm7325-sndcard",
-		     "qcom,sm8250-sndcard";
+	compatible = "nothing,spacewar-sndcard",
+		     "motorola,dubai-sndcard";
 
 	model = "NP1";
 
@@ -1582,7 +1582,6 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
-		input-enable;
 	};
 
 	ts_int_n: ts-int-n-state {
