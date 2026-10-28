@@ -998,6 +998,17 @@
 			};
 		};
 	};
+
+	vibrator@58 {
+		compatible = "awinic,aw86224";
+		reg = <0x58>;
+
+		interrupts-extended = <&tlmm 47 IRQ_TYPE_EDGE_FALLING>;
+		reset-gpios = <&tlmm 46 GPIO_ACTIVE_LOW>;
+
+		pinctrl-0 = <&aw86224_int_default>, <&aw86224_reset_default>;
+		pinctrl-names = "default";
+	};
 };
 
 &ipa {
