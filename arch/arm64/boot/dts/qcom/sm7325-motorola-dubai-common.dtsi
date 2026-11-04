@@ -14,6 +14,7 @@
 #include <dt-bindings/iio/qcom,spmi-adc7-pm7325.h>
 #include <dt-bindings/iio/qcom,spmi-adc7-pmk8350.h>
 #include <dt-bindings/leds/common.h>
+#include <dt-bindings/media/video-interfaces.h>
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
 #include <dt-bindings/sound/qcom,q6afe.h>
@@ -750,6 +751,14 @@
 	status = "okay";
 
 	ports {
+		port@0 {
+			csiphy0_ep: endpoint {
+				data-lanes = <0 1 2>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_CPHY>;
+				remote-endpoint = <&camera_ov32b40_ep>;
+			};
+		};
+
 		port@2 {
 			csiphy2_ep: endpoint {
 				data-lanes = <0 1 2 3>;
@@ -768,6 +777,39 @@
 
 &cci0 {
 	status = "okay";
+};
+
+&cci0_i2c0 {
+	sensor@10 {
+		compatible = "ovti,ov32b40";
+		reg = <0x10>;
+
+		avdd-supply = <&cam_avdd2_2p8>;
+		dovdd-supply = <&cam_iovdd_1p8>;
+		dvdd-supply = <&cam_dvdd1_1p05>;
+
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&cam_sensor_mclk2_active &cam_sensor_active_front>;
+		pinctrl-1 = <&cam_sensor_mclk2_suspend &cam_sensor_suspend_front>;
+
+		orientation = <0>; /* Front facing */
+		rotation = <270>;
+
+		reset-gpios = <&tlmm 20 GPIO_ACTIVE_LOW>;
+
+		clocks = <&camcc CAM_CC_MCLK2_CLK>;
+		assigned-clocks = <&camcc CAM_CC_MCLK2_CLK>;
+		assigned-clock-rates = <24000000>;
+
+		port {
+			camera_ov32b40_ep: endpoint {
+				bus-type = <MEDIA_BUS_TYPE_CSI2_CPHY>;
+				data-lanes = <0 1 2>;
+				link-frequencies = /bits/ 64 <615600000>;
+				remote-endpoint = <&csiphy0_ep>;
+			};
+		};
+	};
 };
 
 &cci0_i2c1 {
@@ -1843,6 +1885,35 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-disable;
+		output-low;
+	};
+
+	cam_sensor_mclk2_active: cam_sensor_mclk2_active {
+		pins = "gpio66";
+		function = "cam_mclk";
+		bias-disable;
+		drive-strength = <2>;
+	};
+
+	cam_sensor_mclk2_suspend: cam_sensor_mclk2_suspend {
+		pins = "gpio66";
+		function = "cam_mclk";
+		bias-pull-down;
+		drive-strength = <2>;
+	};
+
+	cam_sensor_active_front: cam_sensor_active_front {
+		pins = "gpio20";
+		function = "gpio";
+		bias-disable;
+		drive-strength = <2>;
+	};
+
+	cam_sensor_suspend_front: cam_sensor_suspend_front {
+		pins = "gpio20";
+		function = "gpio";
+		bias-pull-down;
+		drive-strength = <2>;
 		output-low;
 	};
 
