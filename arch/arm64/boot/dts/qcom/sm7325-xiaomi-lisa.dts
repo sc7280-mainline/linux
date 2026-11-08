@@ -230,6 +230,37 @@
 		regulator-always-on;
 		vin-supply = <&vph_pwr>;
 	};
+
+	/* Front camera supplies, switched by GPIOs */
+	cam_front_vana: regulator-cam-front-vana {
+		compatible = "regulator-fixed";
+		regulator-name = "cam_front_vana";
+		regulator-min-microvolt = <2800000>;
+		regulator-max-microvolt = <2800000>;
+		startup-delay-us = <135>;
+
+		gpio = <&tlmm 106 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		vin-supply = <&vreg_bob>;
+
+		pinctrl-0 = <&cam_front_vana_en>;
+		pinctrl-names = "default";
+	};
+
+	cam_front_vdig: regulator-cam-front-vdig {
+		compatible = "regulator-fixed";
+		regulator-name = "cam_front_vdig";
+		regulator-min-microvolt = <1050000>;
+		regulator-max-microvolt = <1050000>;
+		startup-delay-us = <135>;
+
+		gpio = <&tlmm 108 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		vin-supply = <&vreg_s8b_1p256>;
+
+		pinctrl-0 = <&cam_front_vdig_en>;
+		pinctrl-names = "default";
+	};
 };
 
 &apps_rsc {
@@ -1023,6 +1054,20 @@
 		drive-strength = <2>;
 		bias-disable;
 	};
+
+	cam_front_vana_en: cam-front-vana-en-state {
+		pins = "gpio106";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	cam_front_vdig_en: cam-front-vdig-en-state {
+		pins = "gpio108";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+	};
 };
 
 &uart5 {
@@ -1375,6 +1420,15 @@
 	status = "okay";
 
 	ports {
+		port@0 {
+			csiphy0_ep: endpoint {
+				clock-lanes = <7>;
+				data-lanes = <0 1 2 3>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
+				remote-endpoint = <&camera_s5k3t2_ep>;
+			};
+		};
+
 		port@1 {
 			csiphy1_ep: endpoint {
 				clock-lanes = <7>;
@@ -1410,6 +1464,37 @@
 
 &cci1 {
 	status = "okay";
+};
+
+/* Front camera: Samsung S5K3T2 on CSIPHY0 / CCI0 bus 0 */
+&cci0_i2c0 {
+	camera@10 {
+		compatible = "samsung,s5k3t2";
+		reg = <0x10>;
+
+		dovdd-supply = <&vreg_l5p>;
+		avdd-supply = <&cam_front_vana>;
+		dvdd-supply = <&cam_front_vdig>;
+
+		clocks = <&camcc CAM_CC_MCLK0_CLK>;
+		assigned-clocks = <&camcc CAM_CC_MCLK0_CLK>;
+		assigned-clock-rates = <19200000>;
+
+		reset-gpios = <&tlmm 20 GPIO_ACTIVE_LOW>;
+		pinctrl-0 = <&cam_mclk0_default>;
+		pinctrl-names = "default";
+
+		orientation = <0>;
+		rotation = <270>;
+
+		port {
+			camera_s5k3t2_ep: endpoint {
+				data-lanes = <1 2 3 4>;
+				link-frequencies = /bits/ 64 <310400000>;
+				remote-endpoint = <&csiphy0_ep>;
+			};
+		};
+	};
 };
 
 /* Main camera: Samsung S5KGW3 on CSIPHY1 / CCI0 bus 1 */
