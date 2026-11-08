@@ -618,8 +618,8 @@
 		regulators {
 			vreg_l1p: ldo1 {
 				regulator-name = "vreg_l1p";
-				regulator-min-microvolt = <1000000>;
-				regulator-max-microvolt = <1200000>;
+				regulator-min-microvolt = <1056000>;
+				regulator-max-microvolt = <1056000>;
 			};
 
 			vreg_l2p: ldo2 {
@@ -648,8 +648,8 @@
 
 			vreg_l6p: ldo6 {
 				regulator-name = "vreg_l6p";
-				regulator-min-microvolt = <2700000>;
-				regulator-max-microvolt = <2900000>;
+				regulator-min-microvolt = <2800000>;
+				regulator-max-microvolt = <2800000>;
 			};
 
 			vreg_l7p: ldo7 {
@@ -1375,6 +1375,15 @@
 	status = "okay";
 
 	ports {
+		port@1 {
+			csiphy1_ep: endpoint {
+				clock-lanes = <7>;
+				data-lanes = <0 1 2 3>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
+				remote-endpoint = <&camera_s5kgw3_ep>;
+			};
+		};
+
 		port@2 {
 			csiphy2_ep: endpoint {
 				clock-lanes = <7>;
@@ -1401,6 +1410,37 @@
 
 &cci1 {
 	status = "okay";
+};
+
+/* Main camera: Samsung S5KGW3 on CSIPHY1 / CCI0 bus 1 */
+&cci0_i2c1 {
+	camera@10 {
+		compatible = "samsung,s5kgw3";
+		reg = <0x10>;
+
+		dovdd-supply = <&vreg_l5p>;
+		avdd-supply = <&vreg_l6p>;
+		dvdd-supply = <&vreg_l1p>;
+
+		clocks = <&camcc CAM_CC_MCLK1_CLK>;
+		assigned-clocks = <&camcc CAM_CC_MCLK1_CLK>;
+		assigned-clock-rates = <19200000>;
+
+		reset-gpios = <&tlmm 21 GPIO_ACTIVE_LOW>;
+		pinctrl-0 = <&cam_mclk1_default>;
+		pinctrl-names = "default";
+
+		orientation = <1>;
+		rotation = <270>;
+
+		port {
+			camera_s5kgw3_ep: endpoint {
+				data-lanes = <1 2 3 4>;
+				link-frequencies = /bits/ 64 <835200000 614400000>;
+				remote-endpoint = <&csiphy1_ep>;
+			};
+		};
+	};
 };
 
 &cci1_i2c0 {
