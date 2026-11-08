@@ -1150,3 +1150,83 @@
 	wdog: watchdog@17c10000 {
 	};
 };
+
+/* Display: CSOT VTDR6130 AMOLED on DSI0, values from the mainlining fork */
+/ {
+	vreg_oled_dvdd: regulator-oled-dvdd {
+		compatible = "regulator-fixed";
+		regulator-name = "oled_dvdd";
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+
+		gpio = <&tlmm 46 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+
+		vin-supply = <&vreg_s1b_1p856>;
+
+		regulator-boot-on;
+	};
+};
+
+&mdss {
+	status = "okay";
+};
+
+&mdss_dsi {
+	vdda-supply = <&vdd_a_dsi_0_1p2>;
+	status = "okay";
+
+	panel@0 {
+		compatible = "csot,vtdr6130";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 44 GPIO_ACTIVE_LOW>;
+
+		vdd-supply = <&vreg_l13c_3p0>;
+		vddio-supply = <&vreg_l12c_1p8>;
+		dvdd-supply = <&vreg_oled_dvdd>;
+
+		pinctrl-0 = <&sde_dsi_active &sde_te_active_sleep>;
+		pinctrl-1 = <&sde_dsi_sleep &sde_te_active_sleep>;
+		pinctrl-names = "default", "sleep";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi_phy {
+	vdds-supply = <&vdd_a_dsi_0_0p9>;
+	status = "okay";
+};
+
+&tlmm {
+	sde_dsi_active: sde-dsi-active-state {
+		pins = "gpio44";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
+
+	sde_dsi_sleep: sde-dsi-sleep-state {
+		pins = "gpio44";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	sde_te_active_sleep: sde-te-active-state {
+		pins = "gpio80";
+		function = "mdp_vsync";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+};
