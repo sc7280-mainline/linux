@@ -31,6 +31,13 @@
 	compatible = "xiaomi,lisa", "qcom,sm7325";
 	chassis-type = "handset";
 
+	/*
+	 * The Xiaomi ABL picks the DTB by these ids. Values from the stock
+	 * yupik DTB and the lisa dtbo entry.
+	 */
+	qcom,msm-id = <475 0x10000>, <515 0x10000>;
+	qcom,board-id = <0x1000b 0>;
+
 	aliases {
 		serial0 = &uart5;
 		serial1 = &uart7;
@@ -182,8 +189,12 @@
 			no-map;
 		};
 
-		framebuffer_mem: framebuffer@e1000000 {
-			reg = <0x0 0xe1000000 0x0 (1080 * 2400 * 4)>;
+		/*
+		 * The ABL refuses to boot unless it finds the splash region under
+		 * this exact path and with the stock size.
+		 */
+		framebuffer_mem: splash_region {
+			reg = <0x0 0xe1000000 0x0 0x2300000>;
 			no-map;
 		};
 
@@ -1105,4 +1116,37 @@
 
 &wifi {
 	status = "okay";
+};
+
+/*
+ * Nodes and labels the Xiaomi ABL touches before handing over to the kernel:
+ * it updates mem-offline and the Android fstab, and the Gunyah hypervisor
+ * overlay targets &wdog, &arch_timer and &soc.
+ */
+/ {
+	mem-offline {
+		compatible = "qcom,mem-offline";
+		offline-sizes = <0x1 0x40000000 0x0 0x40000000>,
+				<0x1 0xc0000000 0x0 0x80000000>,
+				<0x2 0xc0000000 0x1 0x40000000>;
+		granule = <512>;
+	};
+
+	firmware {
+		android {
+			compatible = "android,firmware";
+
+			fstab {
+				compatible = "android,fstab";
+			};
+		};
+	};
+
+	arch_timer: timer {
+	};
+};
+
+&soc {
+	wdog: watchdog@17c10000 {
+	};
 };
