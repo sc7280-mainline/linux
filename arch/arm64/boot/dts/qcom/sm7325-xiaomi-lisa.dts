@@ -6,11 +6,13 @@
 
 /dts-v1/;
 
+#include <dt-bindings/clock/qcom,camcc-sc7280.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/iio/qcom,spmi-adc7-pm7325.h>
 #include <dt-bindings/iio/qcom,spmi-adc7-pm8350b.h>
 #include <dt-bindings/iio/qcom,spmi-adc7-pmk8350.h>
 #include <dt-bindings/leds/common.h>
+#include <dt-bindings/media/video-interfaces.h>
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
 #include <dt-bindings/sound/qcom,q6afe.h>
@@ -1360,4 +1362,74 @@
 		bias-pull-down;
 		input-enable;
 	};
+};
+
+/*
+ * Macro camera: Samsung S5K5E9 on CSIPHY2 / CCI1 bus 0, from the mainlining
+ * fork. Its DW9800V focus motor has no mainline driver and is left out.
+ */
+&camss {
+	vdda-phy-supply = <&vreg_l10c_0p88>;
+	vdda-pll-supply = <&vreg_l6b_1p2>;
+
+	status = "okay";
+
+	ports {
+		port@2 {
+			csiphy2_ep: endpoint {
+				clock-lanes = <7>;
+				data-lanes = <0 1>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
+				remote-endpoint = <&camera_s5k5e9_ep>;
+			};
+		};
+	};
+};
+
+&cci0 {
+	status = "okay";
+};
+
+&cci1 {
+	status = "okay";
+};
+
+&cci1_i2c0 {
+	camera@2d {
+		compatible = "samsung,s5k5e9";
+		reg = <0x2d>;
+
+		vio-supply = <&vreg_l5p>;
+		vana-supply = <&vreg_l4p>;
+		vdig-supply = <&vreg_l2p>;
+
+		clocks = <&camcc CAM_CC_MCLK2_CLK>;
+		clock-names = "xvclk";
+		clock-frequency = <19200000>;
+		assigned-clocks = <&camcc CAM_CC_MCLK2_CLK>;
+		assigned-clock-rates = <19200000>;
+
+		reset-gpios = <&tlmm 77 GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&cam_mclk2_default>;
+		pinctrl-names = "default";
+
+		orientation = <1>;
+		rotation = <270>;
+
+		port {
+			camera_s5k5e9_ep: endpoint {
+				data-lanes = <0 1>;
+				link-frequencies = /bits/ 64 <480000000>;
+				remote-endpoint = <&csiphy2_ep>;
+			};
+		};
+	};
+};
+
+&cci2_default {
+	drive-strength = <4>;
+};
+
+&cci3_default {
+	drive-strength = <4>;
 };
