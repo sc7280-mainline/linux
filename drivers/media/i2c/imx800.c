@@ -41,8 +41,8 @@
 /* Analog gain control */
 #define IMX800_REG_AGAIN	0x0204
 #define IMX800_AGAIN_MIN	0
-#define IMX800_AGAIN_MAX	978
-#define IMX800_AGAIN_STEP	1
+#define IMX800_AGAIN_MAX	15360
+#define IMX800_AGAIN_STEP	4
 #define IMX800_AGAIN_DEFAULT	0
 
 /* Group hold register */
