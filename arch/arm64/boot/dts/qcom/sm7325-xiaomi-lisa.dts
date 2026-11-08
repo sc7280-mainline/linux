@@ -1383,6 +1383,15 @@
 				remote-endpoint = <&camera_s5k5e9_ep>;
 			};
 		};
+
+		port@3 {
+			csiphy3_ep: endpoint {
+				clock-lanes = <7>;
+				data-lanes = <0 1 2 3>;
+				bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
+				remote-endpoint = <&camera_imx355_ep>;
+			};
+		};
 	};
 };
 
@@ -1421,6 +1430,37 @@
 				data-lanes = <0 1>;
 				link-frequencies = /bits/ 64 <480000000>;
 				remote-endpoint = <&csiphy2_ep>;
+			};
+		};
+	};
+};
+
+/* Ultra-wide camera: Sony IMX355 on CSIPHY3 / CCI1 bus 1 */
+&cci1_i2c1 {
+	camera@1a {
+		compatible = "sony,imx355";
+		reg = <0x1a>;
+
+		avdd-supply = <&vreg_l7p>;
+		dvdd-supply = <&vreg_l2p>;
+		dovdd-supply = <&vreg_l5p>;
+
+		clocks = <&camcc CAM_CC_MCLK3_CLK>;
+		assigned-clocks = <&camcc CAM_CC_MCLK3_CLK>;
+		assigned-clock-rates = <19200000>;
+
+		reset-gpios = <&tlmm 78 GPIO_ACTIVE_LOW>;
+		pinctrl-0 = <&cam_mclk3_default>;
+		pinctrl-names = "default";
+
+		orientation = <1>;
+		rotation = <270>;
+
+		port {
+			camera_imx355_ep: endpoint {
+				data-lanes = <1 2 3 4>;
+				link-frequencies = /bits/ 64 <360000000>;
+				remote-endpoint = <&csiphy3_ep>;
 			};
 		};
 	};
