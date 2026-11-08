@@ -324,6 +324,9 @@ struct qcom_battmgr {
 	int error;
 	struct completion ack;
 
+	/* Properties the firmware answered with an unexpected payload size */
+	unsigned long unsupported_props;
+
 	bool service_up;
 
 	struct qcom_battmgr_info info;
@@ -372,6 +375,10 @@ static int qcom_battmgr_request_property(struct qcom_battmgr *battmgr, int opcod
 		.property = cpu_to_le32(property),
 		.value = cpu_to_le32(value),
 	};
+
+	if (opcode == BATTMGR_BAT_PROPERTY_GET && property < BITS_PER_LONG &&
+	    test_bit(property, &battmgr->unsupported_props))
+		return -ENODATA;
 
 	return qcom_battmgr_request(battmgr, &request, sizeof(request));
 }
@@ -1383,21 +1390,11 @@ static void qcom_battmgr_sm8350_callback(struct qcom_battmgr *battmgr,
 	case BATTMGR_BAT_PROPERTY_GET:
 		property = le32_to_cpu(resp->intval.property);
 		if (property == BATT_MODEL_NAME) {
-			if (payload_len != sizeof(resp->strval)) {
-				dev_warn(battmgr->dev,
-					 "invalid payload length for BATT_MODEL_NAME request: %zd\n",
-					 payload_len);
-				battmgr->error = -ENODATA;
-				return;
-			}
+			if (payload_len != sizeof(resp->strval))
+				goto out_unsupported;
 		} else {
-			if (payload_len != sizeof(resp->intval)) {
-				dev_warn(battmgr->dev,
-					 "invalid payload length for %#x request: %zd\n",
-					 property, payload_len);
-				battmgr->error = -ENODATA;
-				return;
-			}
+			if (payload_len != sizeof(resp->intval))
+				goto out_unsupported;
 
 			battmgr->error = le32_to_cpu(resp->intval.result);
 			if (battmgr->error)
@@ -1565,6 +1562,20 @@ static void qcom_battmgr_sm8350_callback(struct qcom_battmgr *battmgr,
 		break;
 	}
 
+	goto out_complete;
+
+out_unsupported:
+	/*
+	 * Some vendor firmware (e.g. Xiaomi lisa) numbers the properties
+	 * differently and answers with another payload size. Stop asking for
+	 * that property instead of timing out on every poll.
+	 */
+	if (property < BITS_PER_LONG &&
+	    !test_and_set_bit(property, &battmgr->unsupported_props))
+		dev_info(battmgr->dev,
+			 "property %#x not supported by firmware (payload %zd)\n",
+			 property, payload_len);
+	battmgr->error = -ENODATA;
 out_complete:
 	complete(&battmgr->ack);
 }
