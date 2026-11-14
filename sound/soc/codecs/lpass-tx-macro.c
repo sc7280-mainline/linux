@@ -2346,6 +2346,19 @@ static int tx_macro_probe(struct platform_device *pdev)
 	if (ret < 0)
 		goto err;
 
+	/*
+	 * Keep the macro and dcodec votes for as long as the driver is bound,
+	 * outside of the PM clocks. Dropping them in runtime suspend lets the
+	 * LPASS codec core power down, which loses state that regcache_sync()
+	 * does not restore, and capture then returns only silence.
+	 */
+	ret = clk_prepare_enable(tx->macro);
+	if (ret)
+		goto err_rpm_put;
+
+	ret = clk_prepare_enable(tx->dcodec);
+	if (ret)
+		goto err_macro;
 
 	/* reset soundwire block */
 	if (tx->data->flags & LPASS_MACRO_FLAG_RESET_SWR)
@@ -2364,11 +2377,11 @@ static int tx_macro_probe(struct platform_device *pdev)
 					      tx_macro_dai,
 					      ARRAY_SIZE(tx_macro_dai));
 	if (ret)
-		goto err_rpm_put;
+		goto err_dcodec;
 
 	ret = tx_macro_register_mclk_output(tx);
 	if (ret)
-		goto err_rpm_put;
+		goto err_dcodec;
 
 	ret = pm_runtime_put_autosuspend(dev);
 	if (ret < 0)
@@ -2376,6 +2389,10 @@ static int tx_macro_probe(struct platform_device *pdev)
 
 	return 0;
 
+err_dcodec:
+	clk_disable_unprepare(tx->dcodec);
+err_macro:
+	clk_disable_unprepare(tx->macro);
 err_rpm_put:
 	if (pm_runtime_put_sync_suspend(dev) < 0)
 		dev_warn(dev, "runtime PM sync suspend failed in probe unwind\n");
@@ -2389,6 +2406,8 @@ static void tx_macro_remove(struct platform_device *pdev)
 {
 	struct tx_macro *tx = dev_get_drvdata(&pdev->dev);
 
+	clk_disable_unprepare(tx->dcodec);
+	clk_disable_unprepare(tx->macro);
 	lpass_macro_pds_exit(tx->pds);
 }
 
