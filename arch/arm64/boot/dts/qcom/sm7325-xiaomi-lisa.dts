@@ -716,6 +716,8 @@
 };
 
 &ipa {
+	qcom,gsi-loader = "self";
+	memory-region = <&ipa_fw_mem>;
 	firmware-name = "qcom/sm7325/xiaomi/lisa/ipa_fws.mbn";
 
 	status = "okay";
