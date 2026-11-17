@@ -904,6 +904,15 @@
 	vcc-supply = <&vdd_qfprom>;
 };
 
+&qup_i2c4_data_clk {
+	/*
+	 * As in the stock device tree: without the pull-up every transfer to
+	 * the AW8624 haptics driver times out.
+	 */
+	drive-strength = <6>;
+	bias-pull-up;
+};
+
 &qup_spi13_cs {
 	drive-strength = <6>;
 	bias-disable;
