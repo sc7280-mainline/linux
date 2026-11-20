@@ -1365,6 +1365,13 @@
 	status = "okay";
 };
 
+&q6afedai {
+	dai@127 {
+		reg = <QUINARY_MI2S_RX>;
+		qcom,sd-lines = <0>;
+	};
+};
+
 &q6cvp {
 	status = "okay";
 };
@@ -1380,13 +1387,6 @@
 &q6voicedai {
 	dai@1 {
 		reg = <VOICEMMODE1>;
-	};
-};
-
-&q6afedai {
-	dai@127 {
-		reg = <QUINARY_MI2S_RX>;
-		qcom,sd-lines = <0>;
 	};
 };
 
@@ -1553,6 +1553,14 @@
 		};
 	};
 
+	voicemmode1-dai-link {
+		link-name = "VoiceMMode1";
+
+		cpu {
+			sound-dai = <&q6voicedai VOICEMMODE1>;
+		};
+	};
+
 	wcd-capture-dai-link {
 		link-name = "WCD Capture";
 
@@ -1566,14 +1574,6 @@
 
 		platform {
 			sound-dai = <&q6routing>;
-		};
-	};
-
-	voicemmode1-dai-link {
-		link-name = "VoiceMMode1";
-
-		cpu {
-			sound-dai = <&q6voicedai VOICEMMODE1>;
 		};
 	};
 };
